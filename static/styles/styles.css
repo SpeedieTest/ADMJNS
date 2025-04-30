@@ -1,17 +1,5 @@
-body {
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: wheat;
-}
-
 .content {
-  max-width: 800px;
-  margin: 50px auto;
-  padding: 20px;
-  background-color: #fff;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 .content h1 {
@@ -25,11 +13,13 @@ body {
   margin-top: 20px;
   border-collapse: collapse;
 }
-.content table th, .content table td {
+.content table th,
+.content table td {
   padding: 10px;
   border: 1px solid #ccc;
 }
-.content table th th, .content table td th {
+.content table th th,
+.content table td th {
   background-color: #f0f0f0;
   color: #333;
 }

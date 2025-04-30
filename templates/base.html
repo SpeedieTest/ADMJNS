@@ -1,12 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static', filename="styles.css")}}" />
+    <link rel="stylesheet" href="{{url_for('static', filename='styles/base.css')}}" />
+    <script src="{{ url_for('static', filename='js/taskbar.js') }}"></script>
     {% block head %}{% endblock %}
 </head>
+
 <body>
-    {% block body %}{% endblock %}
+    <div class="application">
+        <div class="taskbar">
+            <div class="start-btn">Start</div>
+            <div class="current-time" id="time"></div>
+        </div>
+
+        <main>
+            <div class="window-titlebar">
+                <div class="window-title">Harmony Age Care</div>
+                <div class="window-controls">
+                    <div class="min-btn">_</div>
+                    <div class="max-btn">□</div>
+                    <div class="close-btn">X</div>
+                </div>
+            </div>
+
+            <div class="menu-bar">
+                <ul>
+                    <li>File</li>
+                    <li>Edit</li>
+                    <li>Search</li>
+                    <li>Help</li>
+                </ul>
+            </div>
+
+            <div class="window">
+                <div class="window-inner">
+                    <div class="sidebar">
+                        <h2>Menu</h2>
+                        <ul>
+                            <li><a href="/">Login</a></li>
+                            <li><a href="/admin_homepage">Admin Homepage</a></li>
+                            <li><a href="#">Another Link</a></li>
+                        </ul>
+                    </div>
+                    <div class="main-content">
+                        {% block body %}{% endblock %}
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
 </body>
+
 </html>

@@ -21,8 +21,7 @@ class MyTask(db.Model):
     def __repr__(self) -> str:
         return f"Task {self.id}"
 
-with app.app_context():
-    db.create_all()
+
 
 # Routes to Webpages
 # Home page
@@ -76,5 +75,8 @@ def edit(id:int):
 
 
 # Runner and Debugger
-if __name__ == "__main__":
+if __name__ in "__main__":
+    with app.app_context():
+        db.create_all()
+        
     app.run(debug=True)

@@ -6,47 +6,41 @@ $success_hover_colour: #218838;
 $title_colour: #333;
 $bg_color: wheat;
 
-body{
-    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: $bg_color;
-}
-
-.content{
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
-    background-color: #fff;
+.content {
+    //max-width: 800px;
+    //margin: auto;
+    //padding: 20px;
+    //background-color: #fff;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    //box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     text-align: center;
 
-    h1{
+    h1 {
         color: $primary_hover_colour;
     }
 
-    h4{
+    h4 {
         color: #666;
     }
 
-    table{
+    table {
         width: 100%;
         margin-top: 20px;
         border-collapse: collapse;
 
-        th,td{
+        th,
+        td {
             padding: 10px;
             border: 1px solid #ccc;
 
-            th{
+            th {
                 background-color: #f0f0f0;
                 color: #333;
             }
         }
     }
 
-    a{
+    a {
         display: inline-block;
         padding: 8px 16px;
         margin: 5px;
@@ -56,7 +50,7 @@ body{
         text-decoration: none;
         transition: background-color 0.3s ease;
 
-        &:hover{
+        &:hover {
             background-color: $primary_hover_colour;
         }
     }
@@ -72,7 +66,8 @@ body{
         background-color: $success_colour;
         color: #fff;
         cursor: pointer;
-        &:hover{
+
+        &:hover {
             background-color: $success_hover_colour;
         }
     }
