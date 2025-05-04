@@ -23,6 +23,10 @@ def login():
             flash('Please check your login details and try again.', 'danger')
             return redirect(url_for('auth.login'))
         
+        if not user.is_active:
+            flash('This account has been deactivated. Please contact an administrator.', 'danger')
+            return redirect(url_for('auth.login'))
+        
         login_user(user, remember=remember)
         user.last_login = datetime.utcnow()
         db.session.commit()
