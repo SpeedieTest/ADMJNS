@@ -1,58 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static', filename='styles/base.css')}}" />
-    <script src="{{ url_for('static', filename='js/taskbar.js') }}"></script>
+    <title>{% block title %}Aged Care Management System{% endblock %}</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom Tailwind config -->
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        },
+                        accent: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                        },
+                        success: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f',
+                        },
+                        error: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            200: '#fecaca',
+                            300: '#fca5a5',
+                            400: '#f87171',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <!-- Custom styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-in-out;
+        }
+        
+        @keyframes slideIn {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Accessibility improvements */
+        .focus-ring:focus {
+            outline: 2px solid #0ea5e9;
+            outline-offset: 2px;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
     {% block head %}{% endblock %}
 </head>
-
-<body>
-    <div class="application">
-        <div class="taskbar">
-            <div class="start-btn">Start</div>
-            <div class="current-time" id="time"></div>
+<body class="bg-gray-50 font-sans min-h-screen flex flex-col">
+    {% if current_user.is_authenticated %}
+        {% include 'includes/navbar.html' %}
+        <div class="flex flex-1">
+            {% include 'includes/sidebar.html' %}
+            <main class="flex-1 p-6 md:p-8 overflow-x-hidden">
+                {% include 'includes/flash_messages.html' %}
+                {% block content %}{% endblock %}
+            </main>
         </div>
-
-        <main>
-            <div class="window-titlebar">
-                <div class="window-title">Harmony Age Care</div>
-                <div class="window-controls">
-                    <div class="min-btn">_</div>
-                    <div class="max-btn">□</div>
-                    <div class="close-btn">X</div>
-                </div>
-            </div>
-
-            <div class="menu-bar">
-                <ul>
-                    <li>File</li>
-                    <li>Edit</li>
-                    <li>Search</li>
-                    <li>Help</li>
-                </ul>
-            </div>
-
-            <div class="window">
-                <div class="window-inner">
-                    <div class="sidebar">
-                        <h2>Menu</h2>
-                        <ul>
-                            <li><a href="/">Login</a></li>
-                            <li><a href="/admin_homepage">Admin Homepage</a></li>
-                            <li><a href="#">Another Link</a></li>
-                        </ul>
-                    </div>
-                    <div class="main-content">
-                        {% block body %}{% endblock %}
-                    </div>
-
-                </div>
-            </div>
+    {% else %}
+        <main class="flex-1">
+            {% include 'includes/flash_messages.html' %}
+            {% block auth_content %}{% endblock %}
         </main>
-    </div>
+    {% endif %}
+    
+    <footer class="bg-gray-100 text-gray-600 py-4 text-center text-sm">
+        <div class="container mx-auto">
+            <p>© {{ now.strftime('%Y') }} Aged Care Management System. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script>
+        // Close flash messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeButtons = document.querySelectorAll('.close-flash');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.parentElement.classList.add('opacity-0');
+                    setTimeout(() => {
+                        this.parentElement.remove();
+                    }, 300);
+                });
+            });
+            
+            // Auto-hide flash messages after 5 seconds
+            setTimeout(() => {
+                document.querySelectorAll('.flash-message').forEach(flash => {
+                    flash.classList.add('opacity-0');
+                    setTimeout(() => {
+                        flash.remove();
+                    }, 300);
+                });
+            }, 5000);
+        });
+        
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('flex');
+        }
+    </script>
+    {% block scripts %}{% endblock %}
 </body>
-
 </html>

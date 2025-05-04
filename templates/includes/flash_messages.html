@@ -1,0 +1,31 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages fixed top-4 right-4 z-50 w-72 flex flex-col space-y-2">
+            {% for category, message in messages %}
+                {% set bg_color = 'bg-primary-100 border-primary-500 text-primary-800' %}
+                {% set icon = 'fas fa-info-circle text-primary-500' %}
+                
+                {% if category == 'success' %}
+                    {% set bg_color = 'bg-success-100 border-success-500 text-success-800' %}
+                    {% set icon = 'fas fa-check-circle text-success-500' %}
+                {% elif category == 'danger' or category == 'error' %}
+                    {% set bg_color = 'bg-error-100 border-error-500 text-error-800' %}
+                    {% set icon = 'fas fa-exclamation-circle text-error-500' %}
+                {% elif category == 'warning' %}
+                    {% set bg_color = 'bg-warning-100 border-warning-500 text-warning-800' %}
+                    {% set icon = 'fas fa-exclamation-triangle text-warning-500' %}
+                {% endif %}
+                
+                <div class="flash-message {{ bg_color }} border-l-4 px-4 py-3 rounded shadow-md flex items-start justify-between transition-opacity duration-300">
+                    <div class="flex items-start">
+                        <i class="{{ icon }} mr-2 mt-0.5"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                    <button class="close-flash text-gray-500 hover:text-gray-800 focus:outline-none" type="button">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}

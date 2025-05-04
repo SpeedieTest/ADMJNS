@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Staff - {{ staff.full_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('staff.view', id=staff.id) }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Edit Staff</h1>
+        </div>
+    </div>
+
+    <form method="POST" class="bg-white rounded-lg shadow-sm">
+        {{ form.csrf_token }}
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Account Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.role.id }}" class="block text-sm font-medium text-gray-700">Role</label>
+                    {{ form.role(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.role.errors %}
+                        {% for error in form.role.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Personal Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.first_name.id }}" class="block text-sm font-medium text-gray-700">First Name</label>
+                    {{ form.first_name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.first_name.errors %}
+                        {% for error in form.first_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.last_name.id }}" class="block text-sm font-medium text-gray-700">Last Name</label>
+                    {{ form.last_name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.last_name.errors %}
+                        {% for error in form.last_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.date_of_birth.id }}" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                    {{ form.date_of_birth(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.date_of_birth.errors %}
+                        {% for error in form.date_of_birth.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.gender.id }}" class="block text-sm font-medium text-gray-700">Gender</label>
+                    {{ form.gender(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.gender.errors %}
+                        {% for error in form.gender.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Contact Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.phone.id }}" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    {{ form.phone(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.phone.errors %}
+                        {% for error in form.phone.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="{{ form.address.id }}" class="block text-sm font-medium text-gray-700">Address</label>
+                    {{ form.address(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.address.errors %}
+                        {% for error in form.address.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Employment Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.position.id }}" class="block text-sm font-medium text-gray-700">Position</label>
+                    {{ form.position(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.position.errors %}
+                        {% for error in form.position.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.department.id }}" class="block text-sm font-medium text-gray-700">Department</label>
+                    {{ form.department(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.department.errors %}
+                        {% for error in form.department.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.employment_type.id }}" class="block text-sm font-medium text-gray-700">Employment Type</label>
+                    {{ form.employment_type(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.employment_type.errors %}
+                        {% for error in form.employment_type.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.employment_start_date.id }}" class="block text-sm font-medium text-gray-700">Start Date</label>
+                    {{ form.employment_start_date(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.employment_start_date.errors %}
+                        {% for error in form.employment_start_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.hourly_rate.id }}" class="block text-sm font-medium text-gray-700">Hourly Rate</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        {{ form.hourly_rate(class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    </div>
+                    {% if form.hourly_rate.errors %}
+                        {% for error in form.hourly_rate.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Emergency Contact</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.emergency_contact_name.id }}" class="block text-sm font-medium text-gray-700">Contact Name</label>
+                    {{ form.emergency_contact_name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.emergency_contact_name.errors %}
+                        {% for error in form.emergency_contact_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.emergency_contact_phone.id }}" class="block text-sm font-medium text-gray-700">Contact Phone</label>
+                    {{ form.emergency_contact_phone(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
+                    {% if form.emergency_contact_phone.errors %}
+                        {% for error in form.emergency_contact_phone.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex items-center justify-end rounded-b-lg">
+            <button type="button" 
+                    onclick="window.location.href='{{ url_for('staff.view', id=staff.id) }}'"
+                    class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 mr-3">
+                Cancel
+            </button>
+            <button type="submit"
+                    class="bg-primary-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

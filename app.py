@@ -1,82 +1,95 @@
-# Imports
-from flask import Flask, render_template, redirect, request
-from flask_scss import Scss
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template, redirect, url_for
+from models import db
+from flask_login import LoginManager, current_user
 from datetime import datetime
+import os
 
-# My App
-app = Flask(__name__)
-Scss(app)
+# Initialize extensions
+login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
-db = SQLAlchemy(app)
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = os.urandom(24)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///aged_care.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['WTF_CSRF_ENABLED'] = True
+    
+    # Initialize extensions with app
+    db.init_app(app)
+    login_manager.init_app(app)
+    
+    # Import blueprints
+    from routes.auth import auth_routes
+    from routes.dashboard import dashboard_routes
+    from routes.members import member_routes
+    from routes.staff import staff_routes
+    from routes.services import service_routes
+    from routes.facilities import facility_routes
+    from routes.scheduling import scheduling_routes
+    from routes.inventory import inventory_routes
+    
+    # Register blueprints
+    app.register_blueprint(auth_routes)
+    app.register_blueprint(dashboard_routes)
+    app.register_blueprint(member_routes)
+    app.register_blueprint(staff_routes)
+    app.register_blueprint(service_routes)
+    app.register_blueprint(facility_routes)
+    app.register_blueprint(scheduling_routes)
+    app.register_blueprint(inventory_routes)
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        from models.user import User
+        return User.query.get(int(user_id))
+    
+    @app.route('/')
+    def index():
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard.index'))
+        return render_template('index.html')
+    
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return render_template('500.html'), 500
+    
+    @app.context_processor
+    def inject_now():
+        return {'now': datetime.now()}
 
-# Data Class ~ Row of data
-class MyTask(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(100), nullable=False)
-    complete = db.Column(db.Integer, default=0)
-    created = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __repr__(self) -> str:
-        return f"Task {self.id}"
-
-
-
-# Routes to Webpages
-# Home page
-@app.route("/", methods=["POST", "GET"])
-def index():
-    # Add a Task
-    if request.method == "POST":
-        current_task = request.form['content']
-        new_task = MyTask(content=current_task)
-        try:
-            db.session.add(new_task)
-            db.session.commit()
-            return redirect("/")
-        except Exception as e:
-            print(f"ERROR:{e}")
-            return f"ERROR:{e}"
-    # See all current Tasks
-    else:
-        tasks = MyTask.query.order_by(MyTask.created).all()
-        return render_template('index.html', tasks=tasks)
-
-
-
-# Delete an Item
-@app.route("/delete/<int:id>")
-def delete(id:int):
-    delete_task = MyTask.query.get_or_404(id)
-    try:
-        db.session.delete(delete_task)
-        db.session.commit()
-        return redirect("/")
-    except Exception as e:
-        return f"ERROR:{e}"
-
-
-
-# Edit an Item
-@app.route("/edit/<int:id>", methods=["GET", "POST"])
-def edit(id:int):
-    task = MyTask.query.get_or_404(id)
-    if request.method == "POST":
-        task.content = request.form['content']
-        try:
-            db.session.commit()
-            return redirect("/")
-        except Exception as e:
-            return f"ERROR:{e}"
-    else:
-        return render_template('edit.html', task=task)
-
-
-
-# Runner and Debugger
-if __name__ in "__main__":
     with app.app_context():
+        # Import models
+        from models.user import User
+        from models.member import Member, MedicalRecord, CareTask
+        from models.staff import Staff, Qualification
+        from models.service import Service, ServiceLog
+        from models.facility import Facility, Room
+        from models.schedule import Schedule
+        from models.inventory import InventoryItem, InventoryLog
+        
+        # Create tables
         db.create_all()
         
+        # Create admin user if not exists
+        admin = User.query.filter_by(email='admin@agedcare.com').first()
+        if not admin:
+            admin = User(
+                name='Administrator',
+                email='admin@agedcare.com',
+                password='admin123',
+                role='admin'
+            )
+            db.session.add(admin)
+            db.session.commit()
+            print("Admin user created successfully!")
+    
+    return app
+
+if __name__ == '__main__':
+    app = create_app()
     app.run(debug=True)

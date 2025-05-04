@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block auth_content %}
+<div class="min-h-screen flex flex-col justify-center items-center bg-gray-100 text-center">
+    <h1 class="text-6xl font-bold text-primary-600 mb-4">404</h1>
+    <p class="text-xl text-gray-700 mb-6">Page Not Found</p>
+    <a href="{{ url_for('index') }}" class="text-primary-600 underline">Return to Home</a>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Scheduling - Aged Care Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Staff Scheduling</h1>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('scheduling.bulk_create') }}" 
+               class="bg-secondary-600 hover:bg-secondary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-calendar-plus mr-2"></i>
+                Bulk Schedule
+            </a>
+            <a href="{{ url_for('scheduling.create') }}" 
+               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Add Schedule
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="previousWeek()" 
+                            class="text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 class="text-lg font-medium">
+                        {{ start_date.strftime('%B %d') }} - {{ end_date.strftime('%B %d, %Y') }}
+                    </h2>
+                    <button onclick="nextWeek()"
+                            class="text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <select id="staff_filter" name="staff_id" onchange="filterSchedules()"
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">All Staff</option>
+                        {% for staff in staff_members %}
+                            <option value="{{ staff.id }}" {% if selected_staff_id == staff.id|string %}selected{% endif %}>
+                                {{ staff.full_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <a href="{{ url_for('scheduling.staff_availability') }}" 
+                       class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200">
+                        View Availability
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <div class="min-w-full grid grid-cols-7 border-b border-gray-200">
+                {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                {% for day in days %}
+                    {% set current_date = start_date + timedelta(days=loop.index0) %}
+                    <div class="p-4 text-center border-r border-gray-200 {% if current_date == now.date() %}bg-primary-50{% endif %}">
+                        <p class="font-medium text-gray-900">{{ day }}</p>
+                        <p class="text-sm text-gray-500">{{ current_date.strftime('%b %d') }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="grid grid-cols-7 divide-x divide-gray-200">
+                {% for day in range(7) %}
+                    {% set current_date = start_date + timedelta(days=day) %}
+                    <div class="min-h-[200px] p-4 {% if current_date == now.date() %}bg-primary-50{% endif %}">
+                        {% for schedule in schedules %}
+                            {% if schedule.start_time.date() == current_date %}
+                                {% set staff = Staff.query.get(schedule.staff_id) %}
+                                <div class="mb-2 p-2 rounded-lg text-sm
+                                           {% if schedule.schedule_type == 'regular' %}bg-primary-100 text-primary-800
+                                           {% elif schedule.schedule_type == 'overtime' %}bg-warning-100 text-warning-800
+                                           {% else %}bg-secondary-100 text-secondary-800{% endif %}">
+                                    <div class="font-medium">{{ staff.full_name }}</div>
+                                    <div class="text-xs">
+                                        {{ schedule.start_time.strftime('%I:%M %p') }} - 
+                                        {{ schedule.end_time.strftime('%I:%M %p') }}
+                                    </div>
+                                    <div class="text-xs mt-1">
+                                        <span class="px-1.5 py-0.5 rounded-full 
+                                                   {% if schedule.status == 'completed' %}bg-green-100 text-green-800
+                                                   {% elif schedule.status == 'in-progress' %}bg-blue-100 text-blue-800
+                                                   {% elif schedule.status == 'cancelled' %}bg-red-100 text-red-800
+                                                   {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ schedule.status|title }}
+                                        </span>
+                                    </div>
+                                    <div class="mt-1 flex justify-end">
+                                        <a href="{{ url_for('scheduling.view', id=schedule.id) }}" 
+                                           class="text-xs hover:underline">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function previousWeek() {
+        const currentDate = new Date('{{ start_date }}');
+        currentDate.setDate(currentDate.getDate() - 7);
+        window.location.href = `{{ url_for('scheduling.index') }}?start_date=${currentDate.toISOString().split('T')[0]}&staff_id={{ selected_staff_id or '' }}`;
+    }
+
+    function nextWeek() {
+        const currentDate = new Date('{{ start_date }}');
+        currentDate.setDate(currentDate.getDate() + 7);
+        window.location.href = `{{ url_for('scheduling.index') }}?start_date=${currentDate.toISOString().split('T')[0]}&staff_id={{ selected_staff_id or '' }}`;
+    }
+
+    function filterSchedules() {
+        const staffId = document.getElementById('staff_filter').value;
+        window.location.href = `{{ url_for('scheduling.index') }}?start_date={{ start_date.strftime('%Y-%m-%d') }}&staff_id=${staffId}`;
+    }
+</script>
+{% endblock %}

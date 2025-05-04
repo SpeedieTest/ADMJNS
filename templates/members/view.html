@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}{{ member.full_name }} - Member Details{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('members.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Member Details</h1>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('members.edit', id=member.id) }}" 
+               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-edit mr-2"></i>
+                Edit Member
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Information -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Personal Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <img class="h-16 w-16 rounded-full" 
+                                 src="https://ui-avatars.com/api/?name={{ member.first_name }}+{{ member.last_name }}&background=random" 
+                                 alt="{{ member.full_name }}">
+                            <div class="ml-4">
+                                <h2 class="text-xl font-semibold text-gray-800">{{ member.full_name }}</h2>
+                                <p class="text-gray-500">ID: {{ member.id }}</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium
+                                   {% if member.is_active %}
+                                       bg-green-100 text-green-800
+                                   {% else %}
+                                       bg-red-100 text-red-800
+                                   {% endif %}">
+                            {{ 'Active' if member.is_active else 'Inactive' }}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mt-6">
+                        <div>
+                            <p class="text-sm text-gray-500">Date of Birth</p>
+                            <p class="font-medium">{{ member.date_of_birth.strftime('%B %d, %Y') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Gender</p>
+                            <p class="font-medium">{{ member.gender|title }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Care Type</p>
+                            <p class="font-medium">{{ member.care_type|title }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Admission Date</p>
+                            <p class="font-medium">{{ member.admission_date.strftime('%B %d, %Y') if member.admission_date else 'Not set' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Records -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Medical Records</h3>
+                        <a href="{{ url_for('members.add_medical_record', id=member.id) }}" 
+                           class="text-primary-600 hover:text-primary-700">
+                            <i class="fas fa-plus mr-1"></i>
+                            Add Record
+                        </a>
+                    </div>
+
+                    {% if medical_records %}
+                        <div class="space-y-4">
+                            {% for record in medical_records %}
+                                <div class="border-l-4 border-primary-500 pl-4 py-2">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-medium">{{ record.record_type|title }}</p>
+                                            <p class="text-sm text-gray-600">{{ record.description }}</p>
+                                        </div>
+                                        <p class="text-sm text-gray-500">{{ record.record_date.strftime('%B %d, %Y') }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No medical records found</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Care Tasks -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Care Tasks</h3>
+                        <a href="{{ url_for('members.add_care_task', id=member.id) }}" 
+                           class="text-primary-600 hover:text-primary-700">
+                            <i class="fas fa-plus mr-1"></i>
+                            Add Task
+                        </a>
+                    </div>
+
+                    {% if care_tasks %}
+                        <div class="space-y-4">
+                            {% for task in care_tasks %}
+                                <div class="border rounded-lg p-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-medium">{{ task.task_name }}</p>
+                                            <p class="text-sm text-gray-600">{{ task.description }}</p>
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                <i class="far fa-clock mr-1"></i>
+                                                {{ task.scheduled_time.strftime('%B %d, %Y - %I:%M %p') if task.scheduled_time else 'Not scheduled' }}
+                                            </p>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="px-2 py-1 rounded-full text-xs font-medium
+                                                       {% if task.status == 'completed' %}
+                                                           bg-green-100 text-green-800
+                                                       {% elif task.status == 'pending' %}
+                                                           bg-yellow-100 text-yellow-800
+                                                       {% else %}
+                                                           bg-red-100 text-red-800
+                                                       {% endif %}">
+                                                {{ task.status|title }}
+                                            </span>
+                                            {% if task.status == 'pending' %}
+                                                <form method="POST" action="{{ url_for('members.complete_care_task', task_id=task.id) }}" class="ml-2">
+                                                    <button type="submit" class="text-primary-600 hover:text-primary-700">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No care tasks found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="space-y-6">
+            <!-- Contact Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-sm text-gray-500">Phone</p>
+                            <p class="font-medium">{{ member.phone }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Email</p>
+                            <p class="font-medium">{{ member.email }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Address</p>
+                            <p class="font-medium">{{ member.address }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Contact -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Emergency Contact</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-sm text-gray-500">Name</p>
+                            <p class="font-medium">{{ member.emergency_contact_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Phone</p>
+                            <p class="font-medium">{{ member.emergency_contact_phone }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Relationship</p>
+                            <p class="font-medium">{{ member.emergency_contact_relation }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Facility Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Facility Information</h3>
+                    {% if member.facility %}
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-sm text-gray-500">Facility</p>
+                                <p class="font-medium">{{ member.facility.name }}</p>
+                            </div>
+                            {% if member.room %}
+                                <div>
+                                    <p class="text-sm text-gray-500">Room</p>
+                                    <p class="font-medium">{{ member.room.room_number }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500">Not assigned to a facility</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

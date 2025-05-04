@@ -1,0 +1,90 @@
+<div id="sidebar" class="hidden md:flex flex-col w-64 bg-gray-800 text-white overflow-y-auto h-[calc(100vh-4rem)]">
+    <div class="p-4 border-b border-gray-700">
+        <div class="flex items-center justify-center py-2">
+            <div class="relative">
+                <img class="h-16 w-16 rounded-full border-2 border-primary-400" src="https://ui-avatars.com/api/?name={{ current_user.name }}&background=0D8ABC&color=fff" alt="User avatar">
+                <span class="absolute bottom-0 right-0 h-4 w-4 bg-green-500 rounded-full border-2 border-gray-800"></span>
+            </div>
+        </div>
+        <div class="text-center mt-2">
+            <h2 class="font-semibold">{{ current_user.name }}</h2>
+            <p class="text-xs text-gray-400">{{ current_user.role|capitalize }}</p>
+        </div>
+    </div>
+    
+    <div class="py-4 flex-1">
+        <ul>
+            <li class="px-4 py-2">
+                <a href="{{ url_for('dashboard.index') }}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-2 rounded-md transition duration-150">
+                    <i class="fas fa-tachometer-alt w-6"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            
+            <li class="px-4 py-2">
+                <a href="{{ url_for('members.index') }}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-2 rounded-md transition duration-150">
+                    <i class="fas fa-user-group w-6"></i>
+                    <span>Members</span>
+                </a>
+            </li>
+            
+            <li class="px-4 py-2">
+                <a href="{{ url_for('staff.index') }}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-2 rounded-md transition duration-150">
+                    <i class="fas fa-user-nurse w-6"></i>
+                    <span>Staff</span>
+                </a>
+            </li>
+            
+            <li class="px-4 py-2">
+                <a href="{{ url_for('services.index') }}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-2 rounded-md transition duration-150">
+                    <i class="fas fa-hand-holding-heart w-6"></i>
+                    <span>Services</span>
+                </a>
+            </li>
+            
+            <li class="px-4 py-2">
+                <a href="{{ url_for('scheduling.index') }}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-2 rounded-md transition duration-150">
+                    <i class="fas fa-calendar-alt w-6"></i>
+                    <span>Scheduling</span>
+                </a>
+            </li>
+            
+            <li class="px-4 py-2">
+                <a href="{{ url_for('facilities.index') }}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-2 rounded-md transition duration-150">
+                    <i class="fas fa-building w-6"></i>
+                    <span>Facilities</span>
+                </a>
+            </li>
+            
+            <li class="px-4 py-2">
+                <a href="{{ url_for('inventory.index') }}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-2 rounded-md transition duration-150">
+                    <i class="fas fa-boxes-stacked w-6"></i>
+                    <span>Inventory</span>
+                </a>
+            </li>
+            
+            {% if current_user.role == 'admin' %}
+            <li class="px-4 py-2">
+                <a href="#" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-2 rounded-md transition duration-150">
+                    <i class="fas fa-chart-line w-6"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+            
+            <li class="px-4 py-2">
+                <a href="#" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-2 rounded-md transition duration-150">
+                    <i class="fas fa-cog w-6"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <div class="p-4 border-t border-gray-700">
+        <a href="{{ url_for('auth.logout') }}" class="flex items-center text-gray-300 hover:text-white px-2 py-2 rounded-md transition duration-150">
+            <i class="fas fa-sign-out-alt w-6"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</div>

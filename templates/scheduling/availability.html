@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Availability - Aged Care Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('scheduling.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Staff Availability</h1>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <form method="GET" class="flex items-center space-x-4">
+                <div class="flex-1">
+                    <label for="date" class="block text-sm font-medium text-gray-700">Select Date</label>
+                    <input type="date" name="date" id="date"
+                           value="{{ date.strftime('%Y-%m-%d') }}"
+                           onchange="this.form.submit()"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff Member</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours Scheduled</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours Available</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for staff in availability %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <img class="h-10 w-10 rounded-full" 
+                                             src="https://ui-avatars.com/api/?name={{ staff.name }}&background=random" 
+                                             alt="{{ staff.name }}">
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ staff.name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ staff.position }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ '%.1f'|format(staff.hours_scheduled) }} hours</div>
+                                <div class="text-xs text-gray-500">
+                                    {% for schedule in staff.schedules %}
+                                        {{ schedule.start_time.strftime('%I:%M %p') }} - {{ schedule.end_time.strftime('%I:%M %p') }}<br>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium
+                                           {% if staff.hours_available >= 8 %}text-green-600
+                                           {% elif staff.hours_available >= 4 %}text-yellow-600
+                                           {% else %}text-red-600{% endif %}">
+                                    {{ '%.1f'|format(staff.hours_available) }} hours
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ url_for('scheduling.create') }}?staff_id={{ staff.staff_id }}&date={{ date.strftime('%Y-%m-%d') }}" 
+                                   class="text-primary-600 hover:text-primary-900">
+                                    Schedule <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
