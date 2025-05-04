@@ -1,6 +1,6 @@
 # Start of the Members Routes
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-from flask_login import login_required
+from flask_login import login_required, current_user
 from models.member import Member, MedicalRecord, CareTask
 from models.facility import Facility, Room
 from datetime import datetime
@@ -100,3 +100,24 @@ def edit(id):
     facilities = Facility.query.all()
     rooms = Room.query.filter((Room.status == 'available') | (Room.id == member.room_id)).all()
     return render_template('members/edit.html', member=member, facilities=facilities, rooms=rooms)
+
+@member_routes.route('/add-medical-record/<int:id>', methods=['GET', 'POST'])
+@login_required
+def add_medical_record(id):
+    member = Member.query.get_or_404(id)
+    if request.method == 'POST':
+        record_type = request.form.get('record_type')
+        description = request.form.get('description')
+        record_date = datetime.strptime(request.form.get('record_date'), '%Y-%m-%d %H:%M') if request.form.get('record_date') else datetime.now()
+        medical_record = MedicalRecord(
+            member_id=id,
+            record_type=record_type,
+            description=description,
+            record_date=record_date,
+            recorded_by=current_user.id
+        )
+        db.session.add(medical_record)
+        db.session.commit()
+        flash('Medical record added successfully!', 'success')
+        return redirect(url_for('members.view', id=id))
+    return render_template('members/add_medical_record.html', member=member)
