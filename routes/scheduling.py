@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models.schedule import Schedule
 from models.staff import Staff
+from forms import ScheduleForm, BulkScheduleForm
 from datetime import datetime, timedelta
 from app import db
 
@@ -44,3 +45,45 @@ def index():
                           selected_staff_id=staff_id,
                           timedelta=timedelta,
                           Staff=Staff)
+
+@scheduling_routes.route('/create', methods=['GET', 'POST'])
+@login_required
+def create():
+    form = ScheduleForm()
+    
+    if form.validate_on_submit():
+        start_datetime = datetime.combine(form.start_date.data, form.start_time.data)
+        end_datetime = datetime.combine(form.end_date.data, form.end_time.data)
+        
+        # Check for overlapping schedules
+        overlapping = Schedule.query.filter(
+            Schedule.staff_id == form.staff_id.data,
+            Schedule.start_time < end_datetime,
+            Schedule.end_time > start_datetime
+        ).first()
+        
+        if overlapping:
+            flash('This schedule overlaps with an existing schedule for this staff member.', 'danger')
+            return render_template('scheduling/create.html', form=form)
+        
+        try:
+            schedule = Schedule(
+                staff_id=form.staff_id.data,
+                start_time=start_datetime,
+                end_time=end_datetime,
+                schedule_type=form.schedule_type.data,
+                notes=form.notes.data
+            )
+            
+            db.session.add(schedule)
+            db.session.commit()
+            
+            flash('Schedule created successfully!', 'success')
+            return redirect(url_for('scheduling.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while creating the schedule.', 'danger')
+            return render_template('scheduling/create.html', form=form)
+    
+    return render_template('scheduling/create.html', form=form)
