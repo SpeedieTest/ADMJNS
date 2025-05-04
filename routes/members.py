@@ -71,3 +71,32 @@ def create():
     facilities = Facility.query.all()
     rooms = Room.query.filter_by(status='available').all()
     return render_template('members/create.html', facilities=facilities, rooms=rooms)
+
+@member_routes.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit(id):
+    member = Member.query.get_or_404(id)
+    if request.method == 'POST':
+        member.first_name = request.form.get('first_name')
+        member.last_name = request.form.get('last_name')
+        member.date_of_birth = datetime.strptime(request.form.get('date_of_birth'), '%Y-%m-%d')
+        member.gender = request.form.get('gender')
+        member.address = request.form.get('address')
+        member.phone = request.form.get('phone')
+        member.email = request.form.get('email')
+        member.emergency_contact_name = request.form.get('emergency_contact_name')
+        member.emergency_contact_phone = request.form.get('emergency_contact_phone')
+        member.emergency_contact_relation = request.form.get('emergency_contact_relation')
+        member.care_type = request.form.get('care_type')
+        member.admission_date = datetime.strptime(request.form.get('admission_date'), '%Y-%m-%d') if request.form.get('admission_date') else None
+        member.medicare_number = request.form.get('medicare_number')
+        member.health_insurance_provider = request.form.get('health_insurance_provider')
+        member.health_insurance_number = request.form.get('health_insurance_number')
+        member.dietary_requirements = request.form.get('dietary_requirements')
+        member.mobility_status = request.form.get('mobility_status')
+        db.session.commit()
+        flash('Member updated successfully!', 'success')
+        return redirect(url_for('members.view', id=member.id))
+    facilities = Facility.query.all()
+    rooms = Room.query.filter((Room.status == 'available') | (Room.id == member.room_id)).all()
+    return render_template('members/edit.html', member=member, facilities=facilities, rooms=rooms)
