@@ -1,6 +1,7 @@
 # Start of the Authentication Routes
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, current_user, logout_user, login_required
+from werkzeug.security import check_password_hash
 from models.user import User
 from app import db
 from datetime import datetime
