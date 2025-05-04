@@ -1,6 +1,6 @@
 # Start of the Authentication Routes
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_user, current_user
+from flask_login import login_user, current_user, logout_user, login_required
 from models.user import User
 from app import db
 from datetime import datetime
@@ -35,3 +35,10 @@ def login():
         return redirect(next_page)
     
     return render_template('auth/login.html')
+
+@auth_routes.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('auth.login'))
