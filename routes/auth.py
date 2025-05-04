@@ -47,3 +47,26 @@ def logout():
 @login_required
 def profile():
     return render_template('auth/profile.html')
+
+@auth_routes.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not current_user.verify_password(current_password):
+            flash('Current password is incorrect.', 'danger')
+            return redirect(url_for('auth.change_password'))
+        
+        if new_password != confirm_password:
+            flash('New passwords do not match.', 'danger')
+            return redirect(url_for('auth.change_password'))
+        
+        current_user.password = new_password
+        db.session.commit()
+        flash('Your password has been updated.', 'success')
+        return redirect(url_for('auth.profile'))
+    
+    return render_template('auth/change_password.html')
