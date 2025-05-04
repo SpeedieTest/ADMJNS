@@ -87,3 +87,49 @@ def create():
             return render_template('scheduling/create.html', form=form)
     
     return render_template('scheduling/create.html', form=form)
+
+@scheduling_routes.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit(id):
+    schedule = Schedule.query.get_or_404(id)
+    form = ScheduleForm(obj=schedule)
+    
+    if form.validate_on_submit():
+        try:
+            start_datetime = datetime.combine(form.start_date.data, form.start_time.data)
+            end_datetime = datetime.combine(form.end_date.data, form.end_time.data)
+            
+            # Check for overlapping schedules (excluding this one)
+            overlapping = Schedule.query.filter(
+                Schedule.id != id,
+                Schedule.staff_id == form.staff_id.data,
+                Schedule.start_time < end_datetime,
+                Schedule.end_time > start_datetime
+            ).first()
+            
+            if overlapping:
+                flash('This schedule overlaps with an existing schedule for this staff member.', 'danger')
+                return render_template('scheduling/edit.html', form=form, schedule=schedule)
+            
+            schedule.staff_id = form.staff_id.data
+            schedule.start_time = start_datetime
+            schedule.end_time = end_datetime
+            schedule.schedule_type = form.schedule_type.data
+            schedule.notes = form.notes.data
+            
+            db.session.commit()
+            flash('Schedule updated successfully!', 'success')
+            return redirect(url_for('scheduling.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while updating the schedule.', 'danger')
+    
+    # Pre-fill the form with existing data
+    if not form.is_submitted():
+        form.start_date.data = schedule.start_time.date()
+        form.start_time.data = schedule.start_time.time()
+        form.end_date.data = schedule.end_time.date()
+        form.end_time.data = schedule.end_time.time()
+    
+    return render_template('scheduling/edit.html', form=form, schedule=schedule)
