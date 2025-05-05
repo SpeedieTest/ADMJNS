@@ -1,5 +1,4 @@
-# Start of the Members Routes
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models.member import Member, MedicalRecord, CareTask
 from models.facility import Facility, Room
@@ -11,13 +10,23 @@ from app import db
 member_routes = Blueprint('members', __name__, url_prefix='/members')
 
 def generate_member_id():
+    # Generate a prefix for member ID (MEM)
     prefix = "MEM"
+    
+    # Generate a random 6-digit number
     number = ''.join(random.choices(string.digits, k=6))
+    
+    # Get current year (last 2 digits)
     year = datetime.now().strftime('%y')
+    
+    # Combine to create member ID: MEM-RANDOM-YY
     member_id = f"{prefix}-{number}-{year}"
+    
+    # Check if ID already exists, if so, generate a new one
     while Member.query.filter_by(medicare_number=member_id).first():
         number = ''.join(random.choices(string.digits, k=6))
         member_id = f"{prefix}-{number}-{year}"
+    
     return member_id
 
 @member_routes.route('/')
@@ -39,7 +48,9 @@ def view(id):
 def create():
     if request.method == 'POST':
         try:
+            # Generate member ID
             medicare_number = generate_member_id()
+            
             member = Member(
                 first_name=request.form.get('first_name'),
                 last_name=request.form.get('last_name'),
@@ -61,13 +72,20 @@ def create():
                 facility_id=request.form.get('facility_id'),
                 room_id=request.form.get('room_id')
             )
+            
             db.session.add(member)
             db.session.commit()
+            
             flash('Member created successfully!', 'success')
             return redirect(url_for('members.view', id=member.id))
+            
         except Exception as e:
             db.session.rollback()
             flash('An error occurred while creating the member.', 'danger')
+            facilities = Facility.query.all()
+            rooms = Room.query.filter_by(status='available').all()
+            return render_template('members/create.html', facilities=facilities, rooms=rooms)
+    
     facilities = Facility.query.all()
     rooms = Room.query.filter_by(status='available').all()
     return render_template('members/create.html', facilities=facilities, rooms=rooms)
@@ -76,6 +94,7 @@ def create():
 @login_required
 def edit(id):
     member = Member.query.get_or_404(id)
+    
     if request.method == 'POST':
         member.first_name = request.form.get('first_name')
         member.last_name = request.form.get('last_name')
@@ -94,21 +113,53 @@ def edit(id):
         member.health_insurance_number = request.form.get('health_insurance_number')
         member.dietary_requirements = request.form.get('dietary_requirements')
         member.mobility_status = request.form.get('mobility_status')
+        
+        # Handle facility and room changes carefully
+        new_facility_id = request.form.get('facility_id')
+        new_room_id = request.form.get('room_id')
+        
+        if new_facility_id and new_facility_id != str(member.facility_id):
+            member.facility_id = new_facility_id
+        
+        if new_room_id and new_room_id != str(member.room_id):
+            # Update old room status if exists
+            if member.room_id:
+                old_room = Room.query.get(member.room_id)
+                if old_room:
+                    old_room.status = 'available'
+                    old_room.is_occupied = False
+            
+            # Update new room status
+            new_room = Room.query.get(new_room_id)
+            if new_room:
+                new_room.status = 'occupied'
+                new_room.is_occupied = True
+            
+            member.room_id = new_room_id
+            
         db.session.commit()
         flash('Member updated successfully!', 'success')
         return redirect(url_for('members.view', id=member.id))
+    
     facilities = Facility.query.all()
-    rooms = Room.query.filter((Room.status == 'available') | (Room.id == member.room_id)).all()
+    
+    # For rooms, include both available rooms and the member's current room
+    rooms = Room.query.filter(
+        (Room.status == 'available') | (Room.id == member.room_id)
+    ).all()
+    
     return render_template('members/edit.html', member=member, facilities=facilities, rooms=rooms)
 
 @member_routes.route('/add-medical-record/<int:id>', methods=['GET', 'POST'])
 @login_required
 def add_medical_record(id):
     member = Member.query.get_or_404(id)
+    
     if request.method == 'POST':
         record_type = request.form.get('record_type')
         description = request.form.get('description')
         record_date = datetime.strptime(request.form.get('record_date'), '%Y-%m-%d %H:%M') if request.form.get('record_date') else datetime.now()
+        
         medical_record = MedicalRecord(
             member_id=id,
             record_type=record_type,
@@ -116,8 +167,50 @@ def add_medical_record(id):
             record_date=record_date,
             recorded_by=current_user.id
         )
+        
         db.session.add(medical_record)
         db.session.commit()
+        
         flash('Medical record added successfully!', 'success')
         return redirect(url_for('members.view', id=id))
+    
     return render_template('members/add_medical_record.html', member=member)
+
+@member_routes.route('/add-care-task/<int:id>', methods=['GET', 'POST'])
+@login_required
+def add_care_task(id):
+    member = Member.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        task_name = request.form.get('task_name')
+        description = request.form.get('description')
+        frequency = request.form.get('frequency')
+        scheduled_time = datetime.strptime(request.form.get('scheduled_time'), '%Y-%m-%d %H:%M') if request.form.get('scheduled_time') else None
+        
+        care_task = CareTask(
+            member_id=id,
+            task_name=task_name,
+            description=description,
+            frequency=frequency,
+            scheduled_time=scheduled_time
+        )
+        
+        db.session.add(care_task)
+        db.session.commit()
+        
+        flash('Care task added successfully!', 'success')
+        return redirect(url_for('members.view', id=id))
+    
+    return render_template('members/add_care_task.html', member=member)
+
+@member_routes.route('/complete-care-task/<int:task_id>', methods=['POST'])
+@login_required
+def complete_care_task(task_id):
+    care_task = CareTask.query.get_or_404(task_id)
+    care_task.status = 'completed'
+    care_task.completed_time = datetime.now()
+    care_task.completed_by = current_user.id
+    
+    db.session.commit()
+    flash('Care task marked as completed!', 'success')
+    return redirect(url_for('members.view', id=care_task.member_id))
