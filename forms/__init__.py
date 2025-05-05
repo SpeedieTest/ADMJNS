@@ -1,8 +1,13 @@
 from flask_wtf import FlaskForm
 from wtforms import (EmailField, PasswordField, StringField, SelectField, 
-                     DateField, TextAreaField, DecimalField)
+                     DateField, TextAreaField, DecimalField, BooleanField)
 from wtforms.validators import DataRequired, Email, Length, Optional, ValidationError
 from models.user import User
+
+class LoginForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember = BooleanField('Remember Me')
 
 class StaffForm(FlaskForm):
     # Account Information
@@ -85,3 +90,4 @@ class StaffEditForm(FlaskForm):
     # Emergency Contact
     emergency_contact_name = StringField('Emergency Contact Name', validators=[DataRequired()])
     emergency_contact_phone = StringField('Emergency Contact Phone', validators=[DataRequired()])
+
