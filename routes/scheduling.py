@@ -174,3 +174,67 @@ def cancel(id):
         db.session.rollback()
         flash('An error occurred while cancelling the schedule.', 'danger')
         return redirect(url_for('scheduling.view', id=id))
+    
+@scheduling_routes.route('/delete/<int:id>', methods=['POST'])
+@login_required
+def delete(id):
+    schedule = Schedule.query.get_or_404(id)
+    
+    try:
+        # Delete any associated service logs
+        ServiceLog.query.filter_by(schedule_id=id).delete()
+        
+        # Delete the schedule
+        db.session.delete(schedule)
+        db.session.commit()
+        
+        flash('Schedule deleted successfully.', 'success')
+        return redirect(url_for('scheduling.index'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while deleting the schedule.', 'danger')
+        return redirect(url_for('scheduling.view', id=id))
+
+@scheduling_routes.route('/staff-availability')
+@login_required
+def staff_availability():
+    date = request.args.get('date')
+    if date:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+    else:
+        date = datetime.now().date()
+    
+    # Get schedules for all staff on this date
+    day_start = datetime.combine(date, datetime.min.time())
+    day_end = datetime.combine(date, datetime.max.time())
+    
+    # Get all active staff
+    staff_members = Staff.query.filter_by(is_active=True).all()
+    
+    availability = []
+    for staff in staff_members:
+        # Get schedules for this staff member on this date
+        schedules = Schedule.query.filter(
+            Schedule.staff_id == staff.id,
+            Schedule.start_time < day_end,
+            Schedule.end_time > day_start,
+            Schedule.status != 'cancelled'
+        ).all()
+        
+        # Calculate available hours
+        hours_scheduled = sum((min(s.end_time, day_end) - max(s.start_time, day_start)).total_seconds() / 3600 for s in schedules)
+        hours_available = 24 - hours_scheduled
+        
+        availability.append({
+            'staff_id': staff.id,
+            'name': staff.full_name,
+            'position': staff.position,
+            'hours_scheduled': hours_scheduled,
+            'hours_available': hours_available,
+            'schedules': schedules
+        })
+    
+    return render_template('scheduling/availability.html',
+                          availability=availability,
+                          date=date)
