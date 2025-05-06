@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models.schedule import Schedule
 from models.staff import Staff
+from models.service import ServiceLog
 from forms import ScheduleForm, BulkScheduleForm
 from datetime import datetime, timedelta
 from app import db
@@ -133,3 +134,43 @@ def edit(id):
         form.end_time.data = schedule.end_time.time()
     
     return render_template('scheduling/edit.html', form=form, schedule=schedule)
+
+@scheduling_routes.route('/view/<int:id>')
+@login_required
+def view(id):
+    schedule = Schedule.query.get_or_404(id)
+    staff = Staff.query.get(schedule.staff_id)
+    
+    # Get services scheduled during this time
+    services = ServiceLog.query.filter_by(
+        staff_id=schedule.staff_id,
+        schedule_id=schedule.id
+    ).all()
+    
+    return render_template('scheduling/view.html', 
+                          schedule=schedule, 
+                          staff=staff,
+                          services=services)
+
+@scheduling_routes.route('/cancel/<int:id>', methods=['POST'])
+@login_required
+def cancel(id):
+    schedule = Schedule.query.get_or_404(id)
+    
+    try:
+        # Check if services are linked to this schedule
+        services = ServiceLog.query.filter_by(schedule_id=id).all()
+        if services:
+            for service in services:
+                service.status = 'cancelled'
+        
+        schedule.status = 'cancelled'
+        db.session.commit()
+        
+        flash('Schedule cancelled successfully.', 'success')
+        return redirect(url_for('scheduling.index'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while cancelling the schedule.', 'danger')
+        return redirect(url_for('scheduling.view', id=id))
