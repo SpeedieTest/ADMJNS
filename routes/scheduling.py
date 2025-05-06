@@ -238,3 +238,61 @@ def staff_availability():
     return render_template('scheduling/availability.html',
                           availability=availability,
                           date=date)
+
+@scheduling_routes.route('/bulk-create', methods=['GET', 'POST'])
+@login_required
+def bulk_create():
+    form = BulkScheduleForm()
+    
+    if form.validate_on_submit():
+        try:
+            created_count = 0
+            skipped_count = 0
+            
+            current_date = form.start_date.data
+            while current_date <= form.end_date.data:
+                # Check if this day of the week is selected
+                if current_date.weekday() in form.days.data:
+                    # For each staff member
+                    for staff_id in form.staff_ids.data:
+                        # Create the schedule datetime objects
+                        schedule_start = datetime.combine(current_date, form.start_time.data)
+                        schedule_end = datetime.combine(current_date, form.end_time.data)
+                        
+                        # Check for overlapping schedules
+                        overlapping = Schedule.query.filter(
+                            Schedule.staff_id == staff_id,
+                            Schedule.start_time < schedule_end,
+                            Schedule.end_time > schedule_start
+                        ).first()
+                        
+                        if not overlapping:
+                            schedule = Schedule(
+                                staff_id=staff_id,
+                                start_time=schedule_start,
+                                end_time=schedule_end,
+                                schedule_type=form.schedule_type.data,
+                                notes=f"Bulk created on {datetime.now().strftime('%Y-%m-%d')}"
+                            )
+                            db.session.add(schedule)
+                            created_count += 1
+                        else:
+                            skipped_count += 1
+                
+                # Move to next day
+                current_date += timedelta(days=1)
+            
+            db.session.commit()
+            
+            if created_count > 0:
+                flash(f'Successfully created {created_count} schedules. Skipped {skipped_count} due to overlaps.', 'success')
+            else:
+                flash(f'No schedules were created. {skipped_count} were skipped due to overlaps.', 'warning')
+                
+            return redirect(url_for('scheduling.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while creating the schedules.', 'danger')
+    
+    return render_template('scheduling/bulk_create.html', form=form)

@@ -109,4 +109,24 @@ class ScheduleForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(ScheduleForm, self).__init__(*args, **kwargs)
         self.staff_id.choices = [(s.id, f"{s.full_name} ({s.position})") for s in Staff.query.filter_by(is_active=True).all()]
+
+class BulkScheduleForm(FlaskForm):
+    staff_ids = SelectMultipleField('Staff Members', coerce=int, validators=[DataRequired()])
+    start_date = DateField('Start Date', validators=[DataRequired()])
+    end_date = DateField('End Date', validators=[DataRequired()])
+    days = SelectMultipleField('Days', coerce=int, choices=[
+        (0, 'Monday'), (1, 'Tuesday'), (2, 'Wednesday'),
+        (3, 'Thursday'), (4, 'Friday'), (5, 'Saturday'), (6, 'Sunday')
+    ], validators=[DataRequired()])
+    start_time = TimeField('Start Time', validators=[DataRequired()])
+    end_time = TimeField('End Time', validators=[DataRequired()])
+    schedule_type = SelectField('Schedule Type', choices=[
+        ('regular', 'Regular Shift'),
+        ('overtime', 'Overtime'),
+        ('on-call', 'On Call')
+    ], validators=[DataRequired()])
+    
+    def __init__(self, *args, **kwargs):
+        super(BulkScheduleForm, self).__init__(*args, **kwargs)
+        self.staff_ids.choices = [(s.id, f"{s.full_name} ({s.position})") for s in Staff.query.filter_by(is_active=True).all()]
         
