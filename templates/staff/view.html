@@ -1,165 +1,165 @@
 {% extends "base.html" %}
 
-{% block title %}{{ staff.full_name }} - Staff Details{% endblock %}
+{% block title %}Schedule Details - {{ staff.full_name }}{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4">
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center">
-            <a href="{{ url_for('staff.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+            <a href="{{ url_for('scheduling.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <h1 class="text-2xl font-bold text-gray-800">Staff Details</h1>
+            <h1 class="text-2xl font-bold text-gray-800">Schedule Details</h1>
         </div>
-        {% if current_user.role == 'admin' %}
         <div class="flex space-x-3">
-            <a href="{{ url_for('staff.edit', id=staff.id) }}" 
-               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+            <a href="{{ url_for('scheduling.edit', id=schedule.id) }}"
+                class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
                 <i class="fas fa-edit mr-2"></i>
-                Edit Staff
+                Edit Schedule
             </a>
         </div>
-        {% endif %}
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Information -->
         <div class="lg:col-span-2 space-y-6">
-            <!-- Personal Information -->
+            <!-- Schedule Information -->
             <div class="bg-white rounded-lg shadow-sm">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center">
-                            <img class="h-16 w-16 rounded-full" 
-                                 src="https://ui-avatars.com/api/?name={{ staff.first_name }}+{{ staff.last_name }}&background=random" 
-                                 alt="{{ staff.full_name }}">
+                            <img class="h-16 w-16 rounded-full"
+                                src="https://ui-avatars.com/api/?name={{ staff.first_name }}+{{ staff.last_name }}&background=random"
+                                alt="{{ staff.full_name }}">
                             <div class="ml-4">
                                 <h2 class="text-xl font-semibold text-gray-800">{{ staff.full_name }}</h2>
-                                <p class="text-gray-500">Employee ID: {{ staff.employee_id }}</p>
+                                <p class="text-gray-500">{{ staff.position }}</p>
                             </div>
                         </div>
                         <span class="px-3 py-1 rounded-full text-sm font-medium
-                                   {% if staff.is_active %}
-                                       bg-green-100 text-green-800
-                                   {% else %}
-                                       bg-red-100 text-red-800
-                                   {% endif %}">
-                            {{ 'Active' if staff.is_active else 'Inactive' }}
+                                   {% if schedule.status == 'completed' %}bg-green-100 text-green-800
+                                   {% elif schedule.status == 'in-progress' %}bg-blue-100 text-blue-800
+                                   {% elif schedule.status == 'cancelled' %}bg-red-100 text-red-800
+                                   {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ schedule.status|title }}
                         </span>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 mt-6">
-                        <div>
-                            <p class="text-sm text-gray-500">Position</p>
-                            <p class="font-medium">{{ staff.position }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Department</p>
-                            <p class="font-medium">{{ staff.department }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Employment Type</p>
-                            <p class="font-medium">{{ staff.employment_type|title }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Start Date</p>
-                            <p class="font-medium">{{ staff.employment_start_date.strftime('%B %d, %Y') if staff.employment_start_date }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Weekly Schedule -->
-            <div class="bg-white rounded-lg shadow-sm">
-                <div class="p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold text-gray-800">Weekly Schedule</h3>
-                        <div class="flex space-x-4">
-                            <a href="{{ url_for('scheduling.create', staff_id=staff.id) }}" 
-                               class="text-primary-600 hover:text-primary-700">
-                                <i class="fas fa-plus mr-1"></i>
-                                Add Schedule
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="border rounded-lg overflow-hidden">
-                        <!-- Calendar Header -->
-                        <div class="grid grid-cols-7 gap-px bg-gray-200 border-b">
-                            {% set days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
-                            {% for day in days %}
-                                {% set current_date = start_date + timedelta(days=loop.index0) %}
-                                <div class="bg-gray-50 py-2 text-center text-sm font-medium text-gray-700">
-                                    {{ day }}
-                                    <div class="text-xs text-gray-500">{{ current_date.strftime('%d %b') }}</div>
-                                </div>
-                            {% endfor %}
+                    <div class="mt-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-500">Schedule Type</h3>
+                                <p class="mt-1 text-lg font-medium">{{ schedule.schedule_type|title }}</p>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-500">Duration</h3>
+                                {% set duration = (schedule.end_time - schedule.start_time).total_seconds() / 3600 %}
+                                <p class="mt-1 text-lg font-medium">{{ '%.1f'|format(duration) }} hours</p>
+                            </div>
                         </div>
 
-                        <!-- Calendar Grid -->
-                        <div class="grid grid-cols-7 gap-px bg-gray-200">
-                            {% for i in range(7) %}
-                                {% set current_date = start_date + timedelta(days=i) %}
-                                {% set day_schedules = schedules|selectattr("start_time.date()", "eq", current_date)|list %}
-                                
-                                <div class="bg-white min-h-[120px] p-2 {% if current_date == today %}bg-blue-50{% endif %}">
-                                    {% if day_schedules %}
-                                        <div class="space-y-1">
-                                            {% for schedule in day_schedules %}
-                                                <a href="{{ url_for('scheduling.view', id=schedule.id) }}"
-                                                   class="block text-xs p-1 rounded truncate
-                                                          {% if schedule.schedule_type == 'regular' %}bg-primary-100 text-primary-800
-                                                          {% elif schedule.schedule_type == 'overtime' %}bg-warning-100 text-warning-800
-                                                          {% else %}bg-secondary-100 text-secondary-800{% endif %}">
-                                                    {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
-                                                    <br>
-                                                    <span class="text-xs opacity-75">{{ schedule.schedule_type|title }}</span>
-                                                </a>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Qualifications -->
-            <div class="bg-white rounded-lg shadow-sm">
-                <div class="p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-800">Qualifications</h3>
-                        <a href="{{ url_for('staff.add_qualification', staff_id=staff.id) }}" 
-                           class="text-primary-600 hover:text-primary-700">
-                            <i class="fas fa-plus mr-1"></i>
-                            Add Qualification
-                        </a>
-                    </div>
-
-                    {% if qualifications %}
-                        <div class="space-y-4">
-                            {% for qualification in qualifications %}
-                                <div class="border rounded-lg p-4">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <p class="font-medium">{{ qualification.qualification_name }}</p>
-                                            <p class="text-sm text-gray-600">{{ qualification.institution }}</p>
-                                            <div class="mt-2 text-xs text-gray-500">
-                                                <p>Obtained: {{ qualification.date_obtained.strftime('%B %d, %Y') if qualification.date_obtained }}</p>
-                                                {% if qualification.expiry_date %}
-                                                    <p>Expires: {{ qualification.expiry_date.strftime('%B %d, %Y') }}</p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="text-xs text-gray-500">Certificate #: {{ qualification.certificate_number }}</p>
-                                        </div>
+                        <div class="border-t border-gray-200 pt-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-500">Start Time</h3>
+                                    <div class="mt-1">
+                                        <p class="text-lg font-medium">{{ schedule.start_time.strftime('%I:%M %p') }}
+                                        </p>
+                                        <p class="text-sm text-gray-500">{{ schedule.start_time.strftime('%A, %B %d,
+                                            %Y') }}</p>
                                     </div>
                                 </div>
-                            {% endfor %}
+                                <div>
+                                    <h3 class="text-sm font-medium text-gray-500">End Time</h3>
+                                    <div class="mt-1">
+                                        <p class="text-lg font-medium">{{ schedule.end_time.strftime('%I:%M %p') }}</p>
+                                        <p class="text-sm text-gray-500">{{ schedule.end_time.strftime('%A, %B %d, %Y')
+                                            }}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Assigned Residents - Only show for Carers -->
+                        {% if staff.position.lower() == 'carer' %}
+                        <div class="border-t border-gray-200 pt-6">
+                            <h3 class="text-sm font-medium text-gray-500 mb-4">Assigned Residents</h3>
+                            {% if schedule.assigned_residents %}
+                            <div class="space-y-3">
+                                {% for resident in schedule.assigned_residents %}
+                                <div class="flex items-center justify-between p-3 border rounded-lg">
+                                    <div class="flex items-center">
+                                        <img class="h-10 w-10 rounded-full"
+                                            src="https://ui-avatars.com/api/?name={{ resident.first_name }}+{{ resident.last_name }}&background=random"
+                                            alt="{{ resident.full_name }}">
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium">{{ resident.full_name }}</p>
+                                            <p class="text-xs text-gray-500">{{ resident.care_type|title }} Care</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                        {{ resident.care_type|title }}
+                                    </span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-gray-500 text-center py-4">No residents assigned to this shift</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if schedule.notes %}
+                        <div class="border-t border-gray-200 pt-6">
+                            <h3 class="text-sm font-medium text-gray-500">Notes</h3>
+                            <p class="mt-2 text-gray-700 whitespace-pre-line">{{ schedule.notes }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Scheduled Services</h3>
+                    {% if services %}
+                    <div class="space-y-4">
+                        {% for service in services %}
+                        <div class="border rounded-lg p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">{{ service.service.name }}</p>
+                                    <p class="text-sm text-gray-600">{{ service.member.full_name }}</p>
+                                    <div class="mt-2 text-xs text-gray-500">
+                                        <p>Start: {{ service.start_time.strftime('%I:%M %p') }}</p>
+                                        {% if service.end_time %}
+                                        <p>End: {{ service.end_time.strftime('%I:%M %p') }}</p>
+                                        {% set duration = (service.end_time - service.start_time).total_seconds() / 3600
+                                        %}
+                                        <p>Duration: {{ '%.1f'|format(duration) }} hours</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 rounded-full text-xs font-medium
+                                                   {% if service.status == 'completed' %}bg-green-100 text-green-800
+                                                   {% elif service.status == 'in-progress' %}bg-blue-100 text-blue-800
+                                                   {% elif service.status == 'cancelled' %}bg-red-100 text-red-800
+                                                   {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ service.status|title }}
+                                </span>
+                            </div>
+                            {% if service.notes %}
+                            <div class="mt-2 text-sm text-gray-600">
+                                <p class="font-medium">Notes:</p>
+                                <p class="whitespace-pre-line">{{ service.notes }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        <p class="text-gray-500 text-center py-4">No qualifications recorded</p>
+                    <p class="text-gray-500 text-center py-4">No services scheduled</p>
                     {% endif %}
                 </div>
             </div>
@@ -167,99 +167,83 @@
 
         <!-- Sidebar Information -->
         <div class="space-y-6">
-            <!-- Contact Information -->
+            <!-- Quick Actions -->
             <div class="bg-white rounded-lg shadow-sm">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
                     <div class="space-y-3">
-                        <div>
-                            <p class="text-sm text-gray-500">Phone</p>
-                            <p class="font-medium">{{ staff.phone }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Email</p>
-                            <p class="font-medium">{{ staff.email }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Address</p>
-                            <p class="font-medium">{{ staff.address }}</p>
-                        </div>
+                        {% if schedule.status == 'scheduled' %}
+                        <form method="POST" action="{{ url_for('scheduling.cancel', id=schedule.id) }}"
+                            onsubmit="return confirm('Are you sure you want to cancel this schedule?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit"
+                                class="w-full text-center px-4 py-2 border border-red-300 text-red-700 rounded-md text-sm font-medium hover:bg-red-50">
+                                Cancel Schedule
+                            </button>
+                        </form>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('scheduling.delete', id=schedule.id) }}"
+                            onsubmit="return confirm('Are you sure you want to delete this schedule? This action cannot be undone.')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit"
+                                class="w-full text-center px-4 py-2 border border-red-300 text-red-700 rounded-md text-sm font-medium hover:bg-red-50">
+                                Delete Schedule
+                            </button>
+                        </form>
+                        <a href="{{ url_for('services.schedule') }}?staff_id={{ staff.id }}&schedule_id={{ schedule.id }}"
+                            class="block w-full text-center px-4 py-2 border border-primary-300 text-primary-700 rounded-md text-sm font-medium hover:bg-primary-50">
+                            Add Service
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Emergency Contact -->
+            <!-- Schedule History -->
             <div class="bg-white rounded-lg shadow-sm">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Emergency Contact</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Schedule History</h3>
                     <div class="space-y-3">
-                        <div>
-                            <p class="text-sm text-gray-500">Name</p>
-                            <p class="font-medium">{{ staff.emergency_contact_name }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Phone</p>
-                            <p class="font-medium">{{ staff.emergency_contact_phone }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Account Information -->
-            <div class="bg-white rounded-lg shadow-sm">
-                <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Account Information</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <p class="text-sm text-gray-500">Role</p>
-                            <p class="font-medium">{{ user.role|title }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Last Login</p>
-                            <p class="font-medium">
-                                {% if user.last_login %}
-                                    {{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}
-                                {% else %}
-                                    Never
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% if current_user.role == 'admin' %}
-            <!-- Employment Details -->
-            <div class="bg-white rounded-lg shadow-sm">
-                <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Employment Details</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <p class="text-sm text-gray-500">Hourly Rate</p>
-                            <p class="font-medium">${{ '%.2f'|format(staff.hourly_rate|float) }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Weekly Hours</p>
-                            <p class="font-medium">
-                                {% if staff.employment_type == 'full-time' %}
-                                    38 hours
-                                {% elif staff.employment_type == 'part-time' %}
-                                    20 hours
-                                {% else %}
-                                    Variable
-                                {% endif %}
-                            </p>
-                        </div>
-                        {% if staff.employment_type in ['full-time', 'part-time'] %}
-                            <div>
-                                <p class="text-sm text-gray-500">Estimated Annual Salary</p>
-                                <p class="font-medium">${{ '{:,.2f}'.format(annual_salary) }}</p>
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-calendar-plus text-gray-400 w-5"></i>
+                            <div class="ml-3">
+                                <p class="text-gray-600">Created</p>
+                                <p class="text-gray-500">{{ schedule.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
                             </div>
+                        </div>
+                        {% if schedule.updated_at != schedule.created_at %}
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-edit text-gray-400 w-5"></i>
+                            <div class="ml-3">
+                                <p class="text-gray-600">Last Updated</p>
+                                <p class="text-gray-500">{{ schedule.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                            </div>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
             </div>
-            {% endif %}
+
+            <!-- Staff Details -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Staff Details</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-sm text-gray-500">Department</p>
+                            <p class="font-medium">{{ staff.department|title }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Employment Type</p>
+                            <p class="font-medium">{{ staff.employment_type|title }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Contact</p>
+                            <p class="font-medium">{{ staff.phone }}</p>
+                            <p class="text-sm text-gray-600">{{ staff.email }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
