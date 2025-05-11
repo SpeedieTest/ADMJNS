@@ -185,7 +185,17 @@ def add_care_task(id):
         task_name = request.form.get('task_name')
         description = request.form.get('description')
         frequency = request.form.get('frequency')
-        scheduled_time = datetime.strptime(request.form.get('scheduled_time'), '%Y-%m-%d %H:%M') if request.form.get('scheduled_time') else None
+        scheduled_time_str = request.form.get('scheduled_time')
+        
+        # Handle the datetime-local input format
+        scheduled_time = None
+        if scheduled_time_str:
+            try:
+                # Convert from HTML datetime-local format (YYYY-MM-DDTHH:MM) to datetime object
+                scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash('Invalid date format. Please use the date picker.', 'danger')
+                return render_template('members/add_care_task.html', member=member)
         
         care_task = CareTask(
             member_id=id,
