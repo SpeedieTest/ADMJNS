@@ -10,8 +10,6 @@ from app import db
 
 scheduling_routes = Blueprint('scheduling', __name__, url_prefix='/scheduling')
 
-scheduling_routes = Blueprint('scheduling', __name__, url_prefix='/scheduling')
-
 @scheduling_routes.route('/')
 @login_required
 def index():
