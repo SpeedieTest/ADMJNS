@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}{{ service.name }} - Service Details{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('services.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Service Details</h1>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('services.schedule') }}?service_id={{ service.id }}" 
+               class="bg-secondary-600 hover:bg-secondary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-calendar-plus mr-2"></i>
+                Schedule Service
+            </a>
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('services.edit', id=service.id) }}" 
+               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-edit mr-2"></i>
+                Edit Service
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Information -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Service Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-800">{{ service.name }}</h2>
+                            <span class="px-2 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800">
+                                {{ service.category|title }}
+                            </span>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium
+                                   {% if service.is_active %}bg-green-100 text-green-800
+                                   {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ 'Active' if service.is_active else 'Inactive' }}
+                        </span>
+                    </div>
+
+                    {% if service.description %}
+                        <div class="mt-4">
+                            <p class="text-gray-600">{{ service.description }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-6 grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Duration</p>
+                            <p class="text-lg font-medium">{{ service.duration_minutes }} minutes</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Base Cost</p>
+                            <p class="text-lg font-medium">${{ '%.2f'|format(service.base_cost) }}</p>
+                        </div>
+                    </div>
+
+                    {% if service.requires_qualification %}
+                        <div class="mt-6 border-t border-gray-200 pt-6">
+                            <p class="text-sm text-gray-500">Required Qualification</p>
+                            <p class="font-medium">{{ service.requires_qualification }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Service Logs -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Recent Service Logs</h3>
+                        <a href="{{ url_for('services.logs') }}?service_id={{ service.id }}" 
+                           class="text-primary-600 hover:text-primary-700">
+                            View All Logs
+                        </a>
+                    </div>
+
+                    {% if recent_logs %}
+                        <div class="space-y-4">
+                            {% for log in recent_logs %}
+                                <div class="border rounded-lg p-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="px-2 py-1 text-xs font-medium rounded-full
+                                                           {% if log.status == 'completed' %}bg-green-100 text-green-800
+                                                           {% elif log.status == 'in-progress' %}bg-blue-100 text-blue-800
+                                                           {% elif log.status == 'cancelled' %}bg-red-100 text-red-800
+                                                           {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                    {{ log.status|title }}
+                                                </span>
+                                            </div>
+                                            <p class="mt-2 font-medium">{{ log.member.full_name }}</p>
+                                            <p class="text-sm text-gray-500">Staff: {{ log.staff.full_name }}</p>
+                                            <div class="mt-2 text-xs text-gray-500">
+                                                <p>Start: {{ log.start_time.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                                {% if log.end_time %}
+                                                    <p>End: {{ log.end_time.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                                {% endif %}
+                                            </div>
+                                            {% if log.notes %}
+                                                <p class="mt-2 text-sm text-gray-600">{{ log.notes }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <a href="{{ url_for('services.view_log', id=log.id) }}" 
+                                           class="text-primary-600 hover:text-primary-700">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No service logs found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="space-y-6">
+            <!-- Upcoming Services -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Upcoming Services</h3>
+                    {% if upcoming_services %}
+                        <div class="space-y-4">
+                            {% for service in upcoming_services %}
+                                <div class="border-l-4 border-primary-500 pl-3 py-2">
+                                    <p class="font-medium">{{ service.member.full_name }}</p>
+                                    <p class="text-sm text-gray-600">Staff: {{ service.staff.full_name }}</p>
+                                    <p class="text-xs text-gray-500">
+                                        <i class="far fa-clock mr-1"></i>
+                                        {{ service.start_time.strftime('%B %d, %Y at %I:%M %p') }}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No upcoming services scheduled</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Service Statistics -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Service Statistics</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Total Services Completed</p>
+                            <p class="text-2xl font-semibold">
+                                {{ service.service_logs|selectattr('status', 'equalto', 'completed')|list|length }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Services This Month</p>
+                            <p class="text-2xl font-semibold">
+                                {{ service.service_logs|selectattr('start_time.month', 'equalto', now.month)|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

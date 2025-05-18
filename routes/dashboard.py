@@ -37,14 +37,8 @@ def index():
     ).order_by(ServiceLog.start_time.asc()).limit(5).all()
     
     return render_template('dashboard/index.html', 
-                           total_members=total_members,
-                           total_staff=total_staff,
-                           today_services=today_services,
-                           low_inventory=low_inventory,
-                           upcoming_services=upcoming_services)
-
-@dashboard_routes.route('/analytics')
-@login_required
-def analytics():
-    # This would contain more detailed analytics and reporting
-    return render_template('dashboard/analytics.html')
+                         total_members=total_members,
+                         total_staff=total_staff,
+                         today_services=today_services,
+                         low_inventory=low_inventory,
+                         upcoming_services=upcoming_services)

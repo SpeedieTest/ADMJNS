@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Add Inventory Log - {{ item.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('inventory.view', id=item.id) }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Add Inventory Log</h1>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800">{{ item.name }}</h2>
+                    <p class="text-sm text-gray-500">Current Stock: {{ item.current_quantity }} {{ item.unit }}</p>
+                </div>
+                <span class="px-2 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800">
+                    {{ item.category|title }}
+                </span>
+            </div>
+        </div>
+
+        <form method="POST" class="p-6">
+            <div class="space-y-6">
+                <div>
+                    <label for="log_type" class="block text-sm font-medium text-gray-700">Log Type</label>
+                    <select name="log_type" id="log_type" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="">Select Log Type</option>
+                        <option value="received" {% if request.args.get('type') == 'received' %}selected{% endif %}>Received Stock</option>
+                        <option value="used" {% if request.args.get('type') == 'used' %}selected{% endif %}>Used Stock</option>
+                        <option value="expired" {% if request.args.get('type') == 'expired' %}selected{% endif %}>Expired Stock</option>
+                        <option value="damaged">Damaged Stock</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                    <input type="number" name="quantity" id="quantity" required min="0.01" step="0.01"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                    <p class="mt-1 text-sm text-gray-500">Enter the quantity in {{ item.unit }}</p>
+                </div>
+
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-700">Date & Time</label>
+                    <input type="datetime-local" name="date" id="date"
+                           value="{{ now.strftime('%Y-%m-%dT%H:%M') }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+
+                <div>
+                    <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="notes" id="notes" rows="3"
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                              placeholder="Add any additional notes or comments"></textarea>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="{{ url_for('inventory.view', id=item.id) }}"
+                   class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="bg-primary-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    Add Log
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

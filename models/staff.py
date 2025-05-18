@@ -26,7 +26,7 @@ class Staff(db.Model):
     
     # Relationships
     qualifications = db.relationship('Qualification', backref='staff', lazy=True)
-    schedules = db.relationship('Schedule', backref='staff', lazy=True, order_by='Schedule.start_time')
+    schedules = db.relationship('Schedule', back_populates='staff', lazy=True, order_by='Schedule.start_time')
     
     @property
     def full_name(self):

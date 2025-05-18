@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Events - Aged Care Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Events</h1>
+        {% if current_user.role in ['admin', 'staff'] %}
+        <a href="{{ url_for('events.create') }}" 
+           class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+            <i class="fas fa-plus mr-2"></i>
+            Add New Event
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <form method="GET" class="space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" 
+                                   name="search"
+                                   value="{{ search }}"
+                                   placeholder="Search events..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <select name="view" 
+                                onchange="this.form.submit()"
+                                class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="upcoming" {% if view == 'upcoming' %}selected{% endif %}>Upcoming Events</option>
+                            <option value="past" {% if view == 'past' %}selected{% endif %}>Past Events</option>
+                            <option value="all" {% if view == 'all' %}selected{% endif %}>All Events</option>
+                        </select>
+                        {% if search %}
+                            <a href="{{ url_for('events.index') }}"
+                               class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                                Clear
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            {% for event in events %}
+                <div class="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">{{ event.name }}</h3>
+                            {% if event.is_recurring %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                    Recurring
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-center text-gray-600">
+                                <i class="far fa-calendar mr-2"></i>
+                                <span>{{ event.start_time.strftime('%B %d, %Y') }}</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="far fa-clock mr-2"></i>
+                                <span>{{ event.start_time.strftime('%I:%M %p') }} - {{ event.end_time.strftime('%I:%M %p') }}</span>
+                            </div>
+                            {% if event.location %}
+                                <div class="flex items-center text-gray-600">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>
+                                    <span>{{ event.location }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if event.capacity %}
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Capacity</span>
+                                    <span>{{ event.registered_count }}/{{ event.capacity }}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-primary-600 h-2 rounded-full" 
+                                         style="width: {{ (event.registered_count / event.capacity * 100)|round }}%"></div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="mt-4">
+                            <a href="{{ url_for('events.view', id=event.id) }}" 
+                               class="inline-flex items-center text-primary-600 hover:text-primary-700">
+                                View Details
+                                <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if not events %}
+            <div class="text-center py-8">
+                <div class="text-gray-500">No events found</div>
+                {% if current_user.role in ['admin', 'staff'] %}
+                    <a href="{{ url_for('events.create') }}" 
+                       class="inline-block mt-4 text-primary-600 hover:text-primary-700">
+                        Create your first event
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

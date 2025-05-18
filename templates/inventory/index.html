@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory - Aged Care Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Inventory Management</h1>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('inventory.low_stock') }}" 
+               class="bg-warning-600 hover:bg-warning-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Low Stock Items
+            </a>
+            <a href="{{ url_for('inventory.create') }}" 
+               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Add Item
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <form method="GET" class="space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" 
+                                   name="search"
+                                   value="{{ search }}"
+                                   placeholder="Search items..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <select name="category" 
+                                class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
+                                    {{ category|title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" 
+                                   name="low_stock" 
+                                   value="1" 
+                                   {% if low_stock %}checked{% endif %}
+                                   class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <span class="ml-2 text-sm text-gray-700">Show Low Stock Only</span>
+                        </label>
+                        <button type="submit"
+                                class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                            Filter
+                        </button>
+                        {% if search or selected_category or low_stock %}
+                            <a href="{{ url_for('inventory.index') }}"
+                               class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                                Clear
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Level</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in inventory_items %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ item.name }}</div>
+                            <div class="text-sm text-gray-500">{{ item.description|truncate(50) }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                {{ item.category|title }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="text-sm font-medium 
+                                           {% if item.current_quantity <= item.minimum_quantity %}text-red-600
+                                           {% elif item.current_quantity <= item.reorder_level %}text-yellow-600
+                                           {% else %}text-green-600{% endif %}">
+                                    {{ item.current_quantity }} {{ item.unit }}
+                                </div>
+                                {% if item.current_quantity <= item.minimum_quantity %}
+                                    <i class="fas fa-exclamation-circle text-red-500 ml-2" title="Below minimum quantity!"></i>
+                                {% elif item.current_quantity <= item.reorder_level %}
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 ml-2" title="Below reorder level"></i>
+                                {% endif %}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                Min: {{ item.minimum_quantity }} / Reorder: {{ item.reorder_level }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ item.location or 'Not specified' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ url_for('inventory.view', id=item.id) }}" 
+                               class="text-primary-600 hover:text-primary-900 mr-3">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('inventory.edit', id=item.id) }}" 
+                               class="text-primary-600 hover:text-primary-900 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('inventory.add_log', id=item.id) }}" 
+                               class="text-primary-600 hover:text-primary-900">
+                                <i class="fas fa-plus-circle"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not inventory_items %}
+        <div class="text-center py-8">
+            <div class="text-gray-500">No inventory items found</div>
+            <a href="{{ url_for('inventory.create') }}" 
+               class="inline-block mt-4 text-primary-600 hover:text-primary-700">
+                Add your first inventory item
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

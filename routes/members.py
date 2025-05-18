@@ -23,7 +23,7 @@ def generate_member_id():
     member_id = f"{prefix}-{number}-{year}"
     
     # Check if ID already exists, if so, generate a new one
-    while Member.query.filter_by(medicare_number=member_id).first():
+    while Member.query.filter_by(id=member_id).first():
         number = ''.join(random.choices(string.digits, k=6))
         member_id = f"{prefix}-{number}-{year}"
     
@@ -158,7 +158,16 @@ def add_medical_record(id):
     if request.method == 'POST':
         record_type = request.form.get('record_type')
         description = request.form.get('description')
-        record_date = datetime.strptime(request.form.get('record_date'), '%Y-%m-%d %H:%M') if request.form.get('record_date') else datetime.now()
+        record_date_str = request.form.get('record_date')
+        
+        # Handle datetime-local input format (YYYY-MM-DDThh:mm)
+        if record_date_str:
+            try:
+                record_date = datetime.strptime(record_date_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                record_date = datetime.now()
+        else:
+            record_date = datetime.now()
         
         medical_record = MedicalRecord(
             member_id=id,
@@ -185,7 +194,17 @@ def add_care_task(id):
         task_name = request.form.get('task_name')
         description = request.form.get('description')
         frequency = request.form.get('frequency')
-        scheduled_time = datetime.strptime(request.form.get('scheduled_time'), '%Y-%m-%d %H:%M') if request.form.get('scheduled_time') else None
+        scheduled_time_str = request.form.get('scheduled_time')
+        
+        # Handle the datetime-local input format
+        scheduled_time = None
+        if scheduled_time_str:
+            try:
+                # Convert from HTML datetime-local format (YYYY-MM-DDTHH:MM) to datetime object
+                scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash('Invalid date format. Please use the date picker.', 'danger')
+                return render_template('members/add_care_task.html', member=member)
         
         care_task = CareTask(
             member_id=id,

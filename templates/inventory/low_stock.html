@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Low Stock Items - Inventory Management{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('inventory.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Low Stock Items</h1>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm">
+        {% if items %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Stock</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reorder Level</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in items %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">{{ item.name }}</div>
+                                        <div class="text-sm text-gray-500">{{ item.category|title }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium 
+                                               {% if item.current_quantity <= item.minimum_quantity %}text-red-600
+                                               {% else %}text-yellow-600{% endif %}">
+                                        {{ item.current_quantity }} {{ item.unit }}
+                                    </div>
+                                    {% if item.current_quantity <= item.minimum_quantity %}
+                                        <div class="text-xs text-red-500">Below minimum ({{ item.minimum_quantity }})</div>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ item.reorder_level }} {{ item.unit }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if item.supplier %}
+                                        <div class="text-sm text-gray-900">{{ item.supplier }}</div>
+                                        {% if item.supplier_contact %}
+                                            <div class="text-xs text-gray-500">{{ item.supplier_contact }}</div>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-sm text-gray-500">Not specified</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ url_for('inventory.add_log', id=item.id, type='received') }}" 
+                                       class="text-primary-600 hover:text-primary-900 mr-3">
+                                        <i class="fas fa-plus-circle"></i>
+                                        Add Stock
+                                    </a>
+                                    <a href="{{ url_for('inventory.view', id=item.id) }}" 
+                                       class="text-gray-600 hover:text-gray-900">
+                                        <i class="fas fa-eye"></i>
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-8">
+                <div class="text-gray-500">No low stock items found</div>
+                <a href="{{ url_for('inventory.index') }}" 
+                   class="inline-block mt-4 text-primary-600 hover:text-primary-700">
+                    View all inventory
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

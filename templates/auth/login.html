@@ -1,18 +1,76 @@
-{% extends "base.html" %}
-
-{% block title %}Login - Aged Care Management System{% endblock %}
-
-{% block auth_content %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Aged Care Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-600 to-secondary-700 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
         <div class="p-6 sm:p-8">
             <div class="text-center mb-6">
-                <i class="fas fa-heart-pulse text-4xl text-primary-600 mb-3"></i>
-                <h2 class="text-3xl font-bold text-gray-800">Sign in</h2>
-                <p class="text-gray-600">to access Aged Care Management System</p>
+                <div class="flex justify-center mb-4">
+                    <div class="inline-flex rounded-lg">
+                        <a href="{{ url_for('auth.login', login_as='staff') }}" 
+                           class="px-4 py-2 rounded-l-lg {{ 'bg-primary-600 text-white' if request.args.get('login_as') == 'staff' else 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                            <i class="fas fa-user-nurse mr-2"></i>Staff
+                        </a>
+                        <a href="{{ url_for('auth.login', login_as='member') }}"
+                           class="px-4 py-2 rounded-r-lg {{ 'bg-primary-600 text-white' if request.args.get('login_as', 'member') == 'member' else 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                            <i class="fas fa-user mr-2"></i>Member
+                        </a>
+                    </div>
+                </div>
+                {% if request.args.get('login_as') == 'staff' %}
+                    <i class="fas fa-user-nurse text-4xl text-primary-600 mb-3"></i>
+                    <h2 class="text-3xl font-bold text-gray-800">Staff Login</h2>
+                    <p class="text-gray-600">Access staff portal</p>
+                {% else %}
+                    <i class="fas fa-user text-4xl text-primary-600 mb-3"></i>
+                    <h2 class="text-3xl font-bold text-gray-800">Member Login</h2>
+                    <p class="text-gray-600">Access member portal</p>
+                {% endif %}
             </div>
             
             <form class="mt-8 space-y-6" method="POST">
+                <input type="hidden" name="login_as" value="{{ request.args.get('login_as', 'member') }}">
                 <div class="rounded-md shadow-sm space-y-4">
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
@@ -36,12 +94,6 @@
                             Remember me
                         </label>
                     </div>
-
-                    <div class="text-sm">
-                        <a href="#" class="font-medium text-primary-600 hover:text-primary-500">
-                            Forgot your password?
-                        </a>
-                    </div>
                 </div>
 
                 <div>
@@ -53,21 +105,34 @@
                         Sign in
                     </button>
                 </div>
+
+                {% if request.args.get('login_as', 'member') == 'member' %}
+                    <div class="text-center mt-4">
+                        <p class="text-sm text-gray-600">
+                            Don't have an account?
+                            <a href="{{ url_for('auth.register_member') }}" class="font-medium text-primary-600 hover:text-primary-500">
+                                Register here
+                            </a>
+                        </p>
+                        <p class="text-sm text-gray-600 mt-2">
+                            Are you an emergency contact?
+                            <a href="{{ url_for('auth.register_emergency_contact') }}" class="font-medium text-primary-600 hover:text-primary-500">
+                                Register here
+                            </a>
+                        </p>
+                    </div>
+                {% endif %}
             </form>
-            
-            <div class="mt-6 text-center">
-                <p class="text-sm text-gray-600">Demo credentials:</p>
-                <p class="text-xs text-gray-500">Email: admin@agedcare.com | Password: admin123</p>
-            </div>
         </div>
         
         <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 sm:px-8">
             <div class="text-center text-sm">
                 <p class="text-gray-600">
-                    Need assistance? Contact your system administrator
+                    Need assistance? Contact your administrator
                 </p>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
+</body>
+</html>

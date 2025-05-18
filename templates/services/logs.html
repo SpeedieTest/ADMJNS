@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Service Logs - Aged Care Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('services.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Service Logs</h1>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm">
+        <div class="p-4 border-b border-gray-200">
+            <form method="GET" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select name="status" id="status"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <option value="">All Statuses</option>
+                            <option value="scheduled" {% if selected_status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                            <option value="in-progress" {% if selected_status == 'in-progress' %}selected{% endif %}>In Progress</option>
+                            <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="service_id" class="block text-sm font-medium text-gray-700">Service</label>
+                        <select name="service_id" id="service_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <option value="">All Services</option>
+                            {% for service in services %}
+                                <option value="{{ service.id }}" {% if selected_service|int == service.id %}selected{% endif %}>
+                                    {{ service.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="member_id" class="block text-sm font-medium text-gray-700">Member</label>
+                        <select name="member_id" id="member_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <option value="">All Members</option>
+                            {% for member in members %}
+                                <option value="{{ member.id }}" {% if selected_member|int == member.id %}selected{% endif %}>
+                                    {{ member.full_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="staff_id" class="block text-sm font-medium text-gray-700">Staff</label>
+                        <select name="staff_id" id="staff_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <option value="">All Staff</option>
+                            {% for staff in staff_members %}
+                                <option value="{{ staff.id }}" {% if selected_staff|int == staff.id %}selected{% endif %}>
+                                    {{ staff.full_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="date_from" class="block text-sm font-medium text-gray-700">From Date</label>
+                        <input type="date" name="date_from" id="date_from"
+                               value="{{ date_from.strftime('%Y-%m-%d') if date_from }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                    </div>
+
+                    <div>
+                        <label for="date_to" class="block text-sm font-medium text-gray-700">To Date</label>
+                        <input type="date" name="date_to" id="date_to"
+                               value="{{ date_to.strftime('%Y-%m-%d') if date_to }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="submit"
+                            class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                        Apply Filters
+                    </button>
+                    {% if selected_status or selected_service or selected_member or selected_staff or date_from or date_to %}
+                        <a href="{{ url_for('services.logs') }}"
+                           class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                            Clear Filters
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for log in logs %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ log.service.name }}</div>
+                                <div class="text-xs text-gray-500">{{ log.service.category|title }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <img class="h-8 w-8 rounded-full" 
+                                         src="https://ui-avatars.com/api/?name={{ log.member.first_name }}+{{ log.member.last_name }}&background=random" 
+                                         alt="{{ log.member.full_name }}">
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">{{ log.member.full_name }}</div>
+                                        <div class="text-xs text-gray-500">{{ log.member.care_type|title }} Care</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <img class="h-8 w-8 rounded-full" 
+                                         src="https://ui-avatars.com/api/?name={{ log.staff.first_name }}+{{ log.staff.last_name }}&background=random" 
+                                         alt="{{ log.staff.full_name }}">
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">{{ log.staff.full_name }}</div>
+                                        <div class="text-xs text-gray-500">{{ log.staff.position }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ log.start_time.strftime('%B %d, %Y') }}</div>
+                                <div class="text-xs text-gray-500">{{ log.start_time.strftime('%I:%M %p') }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                           {% if log.status == 'completed' %}bg-green-100 text-green-800
+                                           {% elif log.status == 'in-progress' %}bg-blue-100 text-blue-800
+                                           {% elif log.status == 'cancelled' %}bg-red-100 text-red-800
+                                           {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ log.status|title }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ url_for('services.view_log', id=log.id) }}" 
+                                   class="text-primary-600 hover:text-primary-900">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not logs %}
+            <div class="text-center py-8">
+                <div class="text-gray-500">No service logs found</div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

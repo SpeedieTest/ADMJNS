@@ -1,1 +1,91 @@
-<!--PLACEHOLDER-->
+{% extends "base.html" %}
+
+{% block title %}Facilities - Aged Care Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Facilities</h1>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('facilities.create') }}" 
+           class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+            <i class="fas fa-plus mr-2"></i>
+            Add New Facility
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for facility in facilities %}
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">{{ facility.name }}</h2>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                               {% if facility.is_active %}
+                                   bg-green-100 text-green-800
+                               {% else %}
+                                   bg-red-100 text-red-800
+                               {% endif %}">
+                        {{ 'Active' if facility.is_active else 'Inactive' }}
+                    </span>
+                </div>
+
+                <div class="space-y-3 mb-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-map-marker-alt text-gray-400 mt-1 w-5"></i>
+                        <p class="text-gray-600 ml-2">{{ facility.address }}</p>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-phone text-gray-400 w-5"></i>
+                        <p class="text-gray-600 ml-2">{{ facility.phone }}</p>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-envelope text-gray-400 w-5"></i>
+                        <p class="text-gray-600 ml-2">{{ facility.email }}</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Capacity</p>
+                            <p class="text-lg font-semibold text-gray-800">{{ facility.capacity }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Occupancy</p>
+                            {% set occupancy = (facility.members|length / facility.capacity * 100)|round|int if facility.capacity > 0 else 0 %}
+                            <p class="text-lg font-semibold 
+                                    {% if occupancy >= 90 %}text-red-600
+                                    {% elif occupancy >= 75 %}text-yellow-600
+                                    {% else %}text-green-600{% endif %}">
+                                {{ occupancy }}%
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <a href="{{ url_for('facilities.view', id=facility.id) }}" 
+                       class="text-primary-600 hover:text-primary-700">
+                        View Details <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not facilities %}
+    <div class="text-center py-12">
+        <div class="text-gray-500">No facilities found</div>
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('facilities.create') }}" 
+           class="inline-block mt-4 text-primary-600 hover:text-primary-700">
+            Add your first facility
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

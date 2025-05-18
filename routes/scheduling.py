@@ -1,10 +1,10 @@
-# Start of the Sceduling Routes
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from models.schedule import Schedule
 from models.staff import Staff
 from models.service import ServiceLog
-from forms import ScheduleForm, BulkScheduleForm
+from models.member import Member
+from forms import ScheduleForm, ScheduleEditForm, BulkScheduleForm
 from datetime import datetime, timedelta
 from app import db
 
@@ -79,21 +79,21 @@ def create():
             db.session.add(schedule)
             db.session.commit()
             
-            flash('Schedule created successfully!', 'success')
-            return redirect(url_for('scheduling.index'))
+            flash('Schedule created successfully! You can now assign residents.', 'success')
+            return redirect(url_for('scheduling.edit', id=schedule.id))
             
         except Exception as e:
             db.session.rollback()
             flash('An error occurred while creating the schedule.', 'danger')
             return render_template('scheduling/create.html', form=form)
     
-    return render_template('scheduling/create.html', form=form)
+    return render_template('scheduling/create.html', form=form, Staff=Staff)
 
 @scheduling_routes.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
     schedule = Schedule.query.get_or_404(id)
-    form = ScheduleForm(obj=schedule)
+    form = ScheduleEditForm(obj=schedule)
     
     if form.validate_on_submit():
         try:
@@ -118,9 +118,15 @@ def edit(id):
             schedule.schedule_type = form.schedule_type.data
             schedule.notes = form.notes.data
             
+            # Update assigned residents
+            schedule.assigned_residents = []
+            if form.assigned_residents.data:
+                residents = Member.query.filter(Member.id.in_(form.assigned_residents.data)).all()
+                schedule.assigned_residents.extend(residents)
+            
             db.session.commit()
             flash('Schedule updated successfully!', 'success')
-            return redirect(url_for('scheduling.index'))
+            return redirect(url_for('scheduling.view', id=id))
             
         except Exception as e:
             db.session.rollback()
@@ -132,8 +138,9 @@ def edit(id):
         form.start_time.data = schedule.start_time.time()
         form.end_date.data = schedule.end_time.date()
         form.end_time.data = schedule.end_time.time()
+        form.assigned_residents.data = [r.id for r in schedule.assigned_residents]
     
-    return render_template('scheduling/edit.html', form=form, schedule=schedule)
+    return render_template('scheduling/edit.html', form=form, schedule=schedule, Staff=Staff)
 
 @scheduling_routes.route('/view/<int:id>')
 @login_required
@@ -150,7 +157,8 @@ def view(id):
     return render_template('scheduling/view.html', 
                           schedule=schedule, 
                           staff=staff,
-                          services=services)
+                          services=services,
+                          Staff=Staff)
 
 @scheduling_routes.route('/cancel/<int:id>', methods=['POST'])
 @login_required
@@ -174,7 +182,7 @@ def cancel(id):
         db.session.rollback()
         flash('An error occurred while cancelling the schedule.', 'danger')
         return redirect(url_for('scheduling.view', id=id))
-    
+
 @scheduling_routes.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete(id):
@@ -237,7 +245,8 @@ def staff_availability():
     
     return render_template('scheduling/availability.html',
                           availability=availability,
-                          date=date)
+                          date=date,
+                          Staff=Staff)
 
 @scheduling_routes.route('/bulk-create', methods=['GET', 'POST'])
 @login_required
@@ -295,4 +304,4 @@ def bulk_create():
             db.session.rollback()
             flash('An error occurred while creating the schedules.', 'danger')
     
-    return render_template('scheduling/bulk_create.html', form=form)
+    return render_template('scheduling/bulk_create.html', form=form, Staff=Staff)

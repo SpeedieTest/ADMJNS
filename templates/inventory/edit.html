@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ item.name }} - Inventory Management{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('inventory.view', id=item.id) }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Edit Item</h1>
+        </div>
+    </div>
+
+    <form method="POST" class="bg-white rounded-lg shadow-sm">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Item Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Item Name</label>
+                    <input type="text" name="name" id="name" required
+                           value="{{ item.name }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+                
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                    <select name="category" id="category" required onchange="toggleMedicationFields()"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="">Select Category</option>
+                        <option value="medical" {% if item.category == 'medical' %}selected{% endif %}>Medical</option>
+                        <option value="food" {% if item.category == 'food' %}selected{% endif %}>Food</option>
+                        <option value="cleaning" {% if item.category == 'cleaning' %}selected{% endif %}>Cleaning</option>
+                        <option value="equipment" {% if item.category == 'equipment' %}selected{% endif %}>Equipment</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="unit" class="block text-sm font-medium text-gray-700">Unit</label>
+                    <select name="unit" id="unit" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="">Select Unit</option>
+                        <option value="box" {% if item.unit == 'box' %}selected{% endif %}>Box</option>
+                        <option value="pack" {% if item.unit == 'pack' %}selected{% endif %}>Pack</option>
+                        <option value="item" {% if item.unit == 'item' %}selected{% endif %}>Item</option>
+                        <option value="kg" {% if item.unit == 'kg' %}selected{% endif %}>Kilogram</option>
+                        <option value="l" {% if item.unit == 'l' %}selected{% endif %}>Liter</option>
+                    </select>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" id="description" rows="3"
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">{{ item.description }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medication-specific fields -->
+        <div id="medication-fields" class="p-6 border-b border-gray-200 {% if item.category != 'medical' %}hidden{% endif %}">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Medication Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="pills_per_unit" class="block text-sm font-medium text-gray-700">Pills per Unit</label>
+                    <input type="number" name="pills_per_unit" id="pills_per_unit" min="1"
+                           value="{{ item.pills_per_unit }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                    <p class="mt-1 text-sm text-gray-500">Number of pills in each box/pack</p>
+                </div>
+
+                <div>
+                    <label for="dosage_form" class="block text-sm font-medium text-gray-700">Dosage Form</label>
+                    <select name="dosage_form" id="dosage_form"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="">Select Form</option>
+                        <option value="tablet" {% if item.dosage_form == 'tablet' %}selected{% endif %}>Tablet</option>
+                        <option value="capsule" {% if item.dosage_form == 'capsule' %}selected{% endif %}>Capsule</option>
+                        <option value="liquid" {% if item.dosage_form == 'liquid' %}selected{% endif %}>Liquid</option>
+                        <option value="injection" {% if item.dosage_form == 'injection' %}selected{% endif %}>Injection</option>
+                        <option value="cream" {% if item.dosage_form == 'cream' %}selected{% endif %}>Cream</option>
+                        <option value="ointment" {% if item.dosage_form == 'ointment' %}selected{% endif %}>Ointment</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="strength" class="block text-sm font-medium text-gray-700">Strength</label>
+                    <input type="text" name="strength" id="strength"
+                           value="{{ item.strength }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                           placeholder="e.g., 500mg, 10ml">
+                </div>
+
+                <div>
+                    <label for="manufacturer" class="block text-sm font-medium text-gray-700">Manufacturer</label>
+                    <input type="text" name="manufacturer" id="manufacturer"
+                           value="{{ item.manufacturer }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+
+                <div>
+                    <label for="expiry_date" class="block text-sm font-medium text-gray-700">Expiry Date</label>
+                    <input type="date" name="expiry_date" id="expiry_date"
+                           value="{{ item.expiry_date.strftime('%Y-%m-%d') if item.expiry_date }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Stock Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="minimum_quantity" class="block text-sm font-medium text-gray-700">Minimum Quantity</label>
+                    <input type="number" name="minimum_quantity" id="minimum_quantity" required min="0" step="0.01"
+                           value="{{ item.minimum_quantity }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+                
+                <div>
+                    <label for="reorder_level" class="block text-sm font-medium text-gray-700">Reorder Level</label>
+                    <input type="number" name="reorder_level" id="reorder_level" required min="0" step="0.01"
+                           value="{{ item.reorder_level }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+                
+                <div>
+                    <label for="cost_per_unit" class="block text-sm font-medium text-gray-700">Cost per Unit</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" name="cost_per_unit" id="cost_per_unit" required min="0" step="0.01"
+                               value="{{ item.cost_per_unit }}"
+                               class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Supplier Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="supplier" class="block text-sm font-medium text-gray-700">Supplier Name</label>
+                    <input type="text" name="supplier" id="supplier"
+                           value="{{ item.supplier }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+                
+                <div>
+                    <label for="supplier_contact" class="block text-sm font-medium text-gray-700">Supplier Contact</label>
+                    <input type="text" name="supplier_contact" id="supplier_contact"
+                           value="{{ item.supplier_contact }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+                
+                <div>
+                    <label for="location" class="block text-sm font-medium text-gray-700">Storage Location</label>
+                    <input type="text" name="location" id="location"
+                           value="{{ item.location }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 flex items-center justify-end rounded-b-lg">
+            <button type="button" 
+                    onclick="window.location.href='{{ url_for('inventory.view', id=item.id) }}'"
+                    class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 mr-3">
+                Cancel
+            </button>
+            <button type="submit"
+                    class="bg-primary-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleMedicationFields() {
+    const category = document.getElementById('category').value;
+    const medicationFields = document.getElementById('medication-fields');
+    
+    if (category === 'medical') {
+        medicationFields.classList.remove('hidden');
+    } else {
+        medicationFields.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

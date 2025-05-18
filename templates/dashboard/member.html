@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard - {{ current_user.member_account.full_name if current_user.member_account else current_user.emergency_contact_for.full_name }}{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">My Dashboard</h1>
+        <div class="text-sm text-gray-500">
+            <i class="fas fa-calendar-alt mr-1"></i> Today: {{ now.strftime('%B %d, %Y') }}
+        </div>
+    </div>
+
+    {% set member = current_user.member_account or current_user.emergency_contact_for %}
+    
+    <!-- Current Carer -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Current Carer</h2>
+        {% set current_carer = member.current_carer %}
+        {% if current_carer %}
+            <div class="flex items-center">
+                <img class="h-12 w-12 rounded-full" 
+                     src="https://ui-avatars.com/api/?name={{ current_carer.first_name }}+{{ current_carer.last_name }}&background=random" 
+                     alt="{{ current_carer.full_name }}">
+                <div class="ml-4">
+                    <p class="font-medium">{{ current_carer.full_name }}</p>
+                    <p class="text-sm text-gray-500">{{ current_carer.position }}</p>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-gray-500">No carer currently assigned</p>
+        {% endif %}
+    </div>
+
+    <!-- Upcoming Appointments -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-800">Upcoming Appointments</h2>
+        </div>
+        {% set appointments = member.upcoming_appointments %}
+        {% if appointments %}
+            <div class="space-y-4">
+                {% for appointment in appointments %}
+                    <div class="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                            <p class="font-medium">{{ appointment.service.name }}</p>
+                            <div class="text-sm text-gray-500">
+                                <p>{{ appointment.start_time.strftime('%B %d, %Y') }}</p>
+                                <p>{{ appointment.start_time.strftime('%I:%M %p') }}</p>
+                            </div>
+                        </div>
+                        <div class="text-sm">
+                            <p class="text-gray-600">With: {{ appointment.staff.full_name }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-500 text-center py-4">No upcoming appointments</p>
+        {% endif %}
+    </div>
+
+    <!-- Events -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Registered Events -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">My Events</h2>
+            {% set registered_events = member.upcoming_events %}
+            {% if registered_events %}
+                <div class="space-y-4">
+                    {% for registration in registered_events %}
+                        <div class="p-4 border rounded-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">{{ registration.event.name }}</p>
+                                    <div class="text-sm text-gray-500">
+                                        <p>{{ registration.event.start_time.strftime('%B %d, %Y') }}</p>
+                                        <p>{{ registration.event.start_time.strftime('%I:%M %p') }} - {{ registration.event.end_time.strftime('%I:%M %p') }}</p>
+                                        {% if registration.event.is_internal %}
+                                            <p>{{ registration.event.facility.name }}</p>
+                                        {% else %}
+                                            <p>{{ registration.event.location }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <form method="POST" action="{{ url_for('events.cancel_registration', id=registration.id) }}"
+                                      onsubmit="return confirm('Are you sure you want to cancel your registration?')">
+                                    <button type="submit" class="text-red-600 hover:text-red-900">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-center py-4">No upcoming events</p>
+            {% endif %}
+        </div>
+
+        <!-- Available Events -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Available Events</h2>
+            {% set available_events = events %}
+            {% if available_events %}
+                <div class="space-y-4">
+                    {% for event in available_events %}
+                        {% if not event.is_full and not event.is_cancelled %}
+                            <div class="p-4 border rounded-lg">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-medium">{{ event.name }}</p>
+                                        <div class="text-sm text-gray-500">
+                                            <p>{{ event.start_time.strftime('%B %d, %Y') }}</p>
+                                            <p>{{ event.start_time.strftime('%I:%M %p') }} - {{ event.end_time.strftime('%I:%M %p') }}</p>
+                                            {% if event.is_internal %}
+                                                <p>{{ event.facility.name }}</p>
+                                            {% else %}
+                                                <p>{{ event.location }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('events.register', id=event.id) }}">
+                                        <button type="submit" class="text-primary-600 hover:text-primary-700">
+                                            <i class="fas fa-plus"></i> Register
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-center py-4">No available events</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

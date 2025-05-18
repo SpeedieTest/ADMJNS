@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Services - Aged Care Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Services</h1>
+        {% if current_user.role == 'admin' %}
+        <div class="flex space-x-3">
+            <a href="{{ url_for('services.logs') }}" 
+               class="bg-secondary-600 hover:bg-secondary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-history mr-2"></i>
+                View Logs
+            </a>
+            <a href="{{ url_for('services.create') }}" 
+               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Add New Service
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <form method="GET" class="space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" 
+                                   name="search"
+                                   value="{{ search }}"
+                                   placeholder="Search services..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <select name="category" 
+                                class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
+                                    {{ category|title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" 
+                                   name="show_inactive" 
+                                   value="1" 
+                                   {% if show_inactive %}checked{% endif %}
+                                   class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <span class="ml-2 text-sm text-gray-700">Show Inactive</span>
+                        </label>
+                        <button type="submit"
+                                class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                            Filter
+                        </button>
+                        {% if search or selected_category or show_inactive %}
+                            <a href="{{ url_for('services.index') }}"
+                               class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                                Clear
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for service in services %}
+                    <tr>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">{{ service.name }}</div>
+                            <div class="text-sm text-gray-500">{{ service.description|truncate(50) }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                {{ service.category|title }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ service.duration_minutes }} minutes
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${{ '%.2f'|format(service.base_cost) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                       {% if service.is_active %}bg-green-100 text-green-800
+                                       {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ 'Active' if service.is_active else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ url_for('services.view', id=service.id) }}" 
+                               class="text-primary-600 hover:text-primary-900 mr-3">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('services.edit', id=service.id) }}" 
+                               class="text-primary-600 hover:text-primary-900">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not services %}
+        <div class="text-center py-8">
+            <div class="text-gray-500">No services found</div>
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('services.create') }}" 
+               class="inline-block mt-4 text-primary-600 hover:text-primary-700">
+                Add your first service
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

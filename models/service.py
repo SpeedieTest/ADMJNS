@@ -33,5 +33,9 @@ class ServiceLog(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Relationships
+    member = db.relationship('Member', backref='service_logs', lazy=True)
+    staff = db.relationship('Staff', backref='service_logs', lazy=True)
+    
     def __repr__(self):
         return f'<ServiceLog {self.id} for Service {self.service_id}>'

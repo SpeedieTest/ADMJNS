@@ -1,1 +1,223 @@
-<!--PLACEHOLDER-->
+{% extends "base.html" %}
+
+{% block title %}{{ facility.name }} - Facility Details{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('facilities.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Facility Details</h1>
+        </div>
+        {% if current_user.role == 'admin' %}
+        <div class="flex space-x-3">
+            <a href="{{ url_for('facilities.edit', id=facility.id) }}" 
+               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-edit mr-2"></i>
+                Edit Facility
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Information -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Facility Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">{{ facility.name }}</h2>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium
+                                   {% if facility.is_active %}
+                                       bg-green-100 text-green-800
+                                   {% else %}
+                                       bg-red-100 text-red-800
+                                   {% endif %}">
+                            {{ 'Active' if facility.is_active else 'Inactive' }}
+                        </span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-map-marker-alt text-gray-400 mt-1 w-5"></i>
+                            <p class="text-gray-600 ml-2">{{ facility.address }}</p>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-phone text-gray-400 w-5"></i>
+                            <p class="text-gray-600 ml-2">{{ facility.phone }}</p>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-envelope text-gray-400 w-5"></i>
+                            <p class="text-gray-600 ml-2">{{ facility.email }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rooms -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Rooms</h3>
+                        <a href="{{ url_for('facilities.add_room', facility_id=facility.id) }}" 
+                           class="text-primary-600 hover:text-primary-700">
+                            <i class="fas fa-plus mr-1"></i>
+                            Add Room
+                        </a>
+                    </div>
+
+                    {% if rooms %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Floor</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for room in rooms %}
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ room.room_number }}</div>
+                                                <div class="text-sm text-gray-500">Capacity: {{ room.capacity }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ room.room_type|title }}</div>
+                                                {% if room.is_accessible %}
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Accessible</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ room.floor }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 text-xs font-medium rounded-full
+                                                           {% if room.status == 'available' %}bg-green-100 text-green-800
+                                                           {% elif room.status == 'occupied' %}bg-blue-100 text-blue-800
+                                                           {% elif room.status == 'maintenance' %}bg-yellow-100 text-yellow-800
+                                                           {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                    {{ room.status|title }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <a href="{{ url_for('facilities.view_room', id=room.id) }}" 
+                                                   class="text-primary-600 hover:text-primary-900 mr-3">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('facilities.edit_room', id=room.id) }}" 
+                                                   class="text-primary-600 hover:text-primary-900">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No rooms added yet</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Residents -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Current Residents</h3>
+                    {% if residents %}
+                        <div class="space-y-4">
+                            {% for resident in residents %}
+                                <div class="flex items-center justify-between p-4 border rounded-lg">
+                                    <div class="flex items-center">
+                                        <img class="h-10 w-10 rounded-full" 
+                                             src="https://ui-avatars.com/api/?name={{ resident.first_name }}+{{ resident.last_name }}&background=random" 
+                                             alt="{{ resident.full_name }}">
+                                        <div class="ml-4">
+                                            <p class="text-sm font-medium text-gray-900">{{ resident.full_name }}</p>
+                                            <p class="text-sm text-gray-500">Room: {{ resident.room.room_number if resident.room else 'Not Assigned' }}</p>
+                                        </div>
+                                    </div>
+                                    <a href="{{ url_for('members.view', id=resident.id) }}" 
+                                       class="text-primary-600 hover:text-primary-700">
+                                        View Details
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No residents currently assigned</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="space-y-6">
+            <!-- Occupancy Stats -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Occupancy Statistics</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Total Capacity</p>
+                            <p class="text-2xl font-semibold text-gray-800">{{ facility.capacity }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Current Occupancy</p>
+                            <div class="flex items-center">
+                                <p class="text-2xl font-semibold 
+                                         {% if occupancy_rate >= 90 %}text-red-600
+                                         {% elif occupancy_rate >= 75 %}text-yellow-600
+                                         {% else %}text-green-600{% endif %}">
+                                    {{ occupancy_rate }}%
+                                </p>
+                                <p class="ml-2 text-sm text-gray-500">
+                                    ({{ occupied_rooms }}/{{ total_rooms }} rooms)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manager Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Facility Manager</h3>
+                    {% if facility.manager_id %}
+                        {% set manager = staff.query.get(facility.manager_id) %}
+                        <div class="flex items-center mb-4">
+                            <img class="h-12 w-12 rounded-full" 
+                                 src="https://ui-avatars.com/api/?name={{ manager.first_name }}+{{ manager.last_name }}&background=random" 
+                                 alt="{{ manager.full_name }}">
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-900">{{ manager.full_name }}</p>
+                                <p class="text-sm text-gray-500">{{ manager.email }}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <i class="fas fa-phone text-gray-400 w-5"></i>
+                                <p class="text-sm text-gray-600 ml-2">{{ manager.phone }}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 w-5"></i>
+                                <p class="text-sm text-gray-600 ml-2">Since {{ manager.employment_start_date.strftime('%B %Y') }}</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No manager assigned</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

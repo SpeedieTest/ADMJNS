@@ -1,1 +1,138 @@
-<!--PLACEHOLDER-->
+{% extends "base.html" %}
+
+{% block title %}Room {{ room.room_number }} - {{ facility.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('facilities.view', id=facility.id) }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Room Details</h1>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('facilities.edit_room', id=room.id) }}" 
+               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-edit mr-2"></i>
+                Edit Room
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Information -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Room Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">Room {{ room.room_number }}</h2>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium
+                                   {% if room.status == 'available' %}bg-green-100 text-green-800
+                                   {% elif room.status == 'occupied' %}bg-blue-100 text-blue-800
+                                   {% elif room.status == 'maintenance' %}bg-yellow-100 text-yellow-800
+                                   {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ room.status|title }}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Room Type</p>
+                            <p class="font-medium">{{ room.room_type|title }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Floor</p>
+                            <p class="font-medium">{{ room.floor }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Capacity</p>
+                            <p class="font-medium">{{ room.capacity }} person(s)</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Accessibility</p>
+                            <p class="font-medium">{{ 'Wheelchair Accessible' if room.is_accessible else 'Standard Access' }}</p>
+                        </div>
+                    </div>
+
+                    {% if room.amenities %}
+                        <div class="mt-6">
+                            <p class="text-sm text-gray-500 mb-2">Amenities</p>
+                            <p class="text-gray-700">{{ room.amenities }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Current Residents -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Current Residents</h3>
+                    {% if residents %}
+                        <div class="space-y-4">
+                            {% for resident in residents %}
+                                <div class="flex items-center justify-between p-4 border rounded-lg">
+                                    <div class="flex items-center">
+                                        <img class="h-10 w-10 rounded-full" 
+                                             src="https://ui-avatars.com/api/?name={{ resident.first_name }}+{{ resident.last_name }}&background=random" 
+                                             alt="{{ resident.full_name }}">
+                                        <div class="ml-4">
+                                            <p class="text-sm font-medium text-gray-900">{{ resident.full_name }}</p>
+                                            <p class="text-sm text-gray-500">Since: {{ resident.admission_date.strftime('%B %d, %Y') }}</p>
+                                        </div>
+                                    </div>
+                                    <a href="{{ url_for('members.view', id=resident.id) }}" 
+                                       class="text-primary-600 hover:text-primary-700">
+                                        View Details
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No residents currently assigned</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="space-y-6">
+            <!-- Room Status -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Room Status</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Occupancy</p>
+                            <p class="text-2xl font-semibold 
+                                    {% if room.is_occupied %}text-blue-600{% else %}text-green-600{% endif %}">
+                                {{ residents|length }}/{{ room.capacity }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Last Maintenance</p>
+                            <p class="font-medium">Not recorded</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                    <div class="space-y-3">
+                        <a href="#" class="block w-full text-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Schedule Maintenance
+                        </a>
+                        <a href="#" class="block w-full text-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Report Issue
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

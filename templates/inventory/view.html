@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} - Inventory Details{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+            <a href="{{ url_for('inventory.index') }}" class="text-gray-600 hover:text-gray-800 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Inventory Details</h1>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('inventory.edit', id=item.id) }}" 
+               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center">
+                <i class="fas fa-edit mr-2"></i>
+                Edit Item
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Information -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Item Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-800">{{ item.name }}</h2>
+                            <span class="px-2 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800">
+                                {{ item.category|title }}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Unit Price</p>
+                            <p class="text-lg font-semibold">${{ '%.2f'|format(item.cost_per_unit) }}</p>
+                        </div>
+                    </div>
+
+                    {% if item.description %}
+                        <div class="mt-4">
+                            <p class="text-gray-600">{{ item.description }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-6 grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Current Stock</p>
+                            <p class="text-2xl font-semibold 
+                                    {% if item.current_quantity <= item.minimum_quantity %}text-red-600
+                                    {% elif item.current_quantity <= item.reorder_level %}text-yellow-600
+                                    {% else %}text-green-600{% endif %}">
+                                {{ item.current_quantity }} {{ item.unit }}
+                                {% if item.category == 'medical' and item.pills_per_unit %}
+                                    <span class="text-sm text-gray-500">({{ item.total_pills }} pills total)</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Stock Value</p>
+                            <p class="text-2xl font-semibold">${{ '%.2f'|format(item.current_quantity * item.cost_per_unit) }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Minimum Quantity</p>
+                            <p class="font-medium">{{ item.minimum_quantity }} {{ item.unit }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Reorder Level</p>
+                            <p class="font-medium">{{ item.reorder_level }} {{ item.unit }}</p>
+                        </div>
+                    </div>
+
+                    {% if item.category == 'medical' %}
+                    <div class="mt-6 border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Medication Details</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            {% if item.pills_per_unit %}
+                            <div>
+                                <p class="text-sm text-gray-500">Pills per {{ item.unit }}</p>
+                                <p class="font-medium">{{ item.pills_per_unit }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            {% if item.dosage_form %}
+                            <div>
+                                <p class="text-sm text-gray-500">Dosage Form</p>
+                                <p class="font-medium">{{ item.dosage_form|title }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            {% if item.strength %}
+                            <div>
+                                <p class="text-sm text-gray-500">Strength</p>
+                                <p class="font-medium">{{ item.strength }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            {% if item.manufacturer %}
+                            <div>
+                                <p class="text-sm text-gray-500">Manufacturer</p>
+                                <p class="font-medium">{{ item.manufacturer }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            {% if item.expiry_date %}
+                            <div>
+                                <p class="text-sm text-gray-500">Expiry Date</p>
+                                <p class="font-medium {% if item.expiry_date <= now.date() %}text-red-600{% endif %}">
+                                    {{ item.expiry_date.strftime('%B %d, %Y') }}
+                                    {% if item.expiry_date <= now.date() %}
+                                        <span class="text-xs">(Expired)</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Inventory Logs -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Inventory Logs</h3>
+                        <a href="{{ url_for('inventory.add_log', id=item.id) }}" 
+                           class="text-primary-600 hover:text-primary-700">
+                            <i class="fas fa-edit mr-1"></i>
+                            Edit Stock
+                        </a>
+                    </div>
+
+                    {% if logs %}
+                        <div class="space-y-4">
+                            {% for log in logs %}
+                                <div class="border rounded-lg p-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                                       {% if log.log_type == 'received' %}bg-green-100 text-green-800
+                                                       {% elif log.log_type == 'used' %}bg-blue-100 text-blue-800
+                                                       {% elif log.log_type == 'expired' %}bg-red-100 text-red-800
+                                                       {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                                {{ log.log_type|title }}
+                                            </span>
+                                            <p class="mt-2 font-medium">
+                                                {% if log.log_type == 'received' %}+{% else %}-{% endif %}
+                                                {{ log.quantity }} {{ item.unit }}
+                                                {% if item.category == 'medical' and item.pills_per_unit %}
+                                                    <span class="text-sm text-gray-500">
+                                                        ({{ log.quantity * item.pills_per_unit }} pills)
+                                                    </span>
+                                                {% endif %}
+                                            </p>
+                                            <p class="text-sm text-gray-500">
+                                                Previous: {{ log.previous_quantity }} {{ item.unit }} →
+                                                New: {{ log.new_quantity }} {{ item.unit }}
+                                            </p>
+                                            {% if log.notes %}
+                                                <p class="mt-2 text-sm text-gray-600">{{ log.notes }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm text-gray-500">{{ log.date.strftime('%B %d, %Y') }}</p>
+                                            <p class="text-xs text-gray-500">{{ log.date.strftime('%I:%M %p') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No inventory logs found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="space-y-6">
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                    <div class="space-y-3">
+                        <a href="{{ url_for('inventory.add_log', id=item.id) }}" 
+                           class="block w-full text-center px-4 py-2 border border-primary-300 text-primary-700 rounded-md text-sm font-medium hover:bg-primary-50">
+                            <i class="fas fa-edit mr-2"></i>
+                            Edit Stock Level
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supplier Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Supplier Information</h3>
+                    {% if item.supplier %}
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-sm text-gray-500">Supplier</p>
+                                <p class="font-medium">{{ item.supplier }}</p>
+                            </div>
+                            {% if item.supplier_contact %}
+                                <div>
+                                    <p class="text-sm text-gray-500">Contact</p>
+                                    <p class="font-medium">{{ item.supplier_contact }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500">No supplier information available</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Storage Information -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Storage Information</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-sm text-gray-500">Location</p>
+                            <p class="font-medium">{{ item.location or 'Not specified' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Last Updated</p>
+                            <p class="font-medium">{{ item.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

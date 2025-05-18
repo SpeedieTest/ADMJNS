@@ -79,6 +79,20 @@
                     {% endif %}
                 </div>
 
+                {% set staff = Staff.query.get(schedule.staff_id) %}
+                {% if staff and staff.position.lower() == 'carer' %}
+                <div>
+                    <label for="{{ form.assigned_residents.id }}" class="block text-sm font-medium text-gray-700">Assigned Residents</label>
+                    <p class="text-xs text-gray-500 mb-2">Maximum: 5 residential care or 2 in-home care patients per shift</p>
+                    {{ form.assigned_residents(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500", size=5, multiple=True) }}
+                    {% if form.assigned_residents.errors %}
+                        {% for error in form.assigned_residents.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                {% endif %}
+
                 <div>
                     <label for="{{ form.notes.id }}" class="block text-sm font-medium text-gray-700">Notes</label>
                     {{ form.notes(rows=3, class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500") }}
@@ -104,3 +118,4 @@
     </div>
 </div>
 {% endblock %}
+```

@@ -12,13 +12,13 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.urandom(24)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///aged_care.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
     app.config['WTF_CSRF_ENABLED'] = True
     
     # Initialize extensions with app
     db.init_app(app)
     login_manager.init_app(app)
-    
+    #THIS ONE
     # Import blueprints
     from routes.auth import auth_routes
     from routes.dashboard import dashboard_routes
@@ -28,6 +28,7 @@ def create_app():
     from routes.facilities import facility_routes
     from routes.scheduling import scheduling_routes
     from routes.inventory import inventory_routes
+    from routes.events import events_routes
     
     # Register blueprints
     app.register_blueprint(auth_routes)
@@ -38,6 +39,7 @@ def create_app():
     app.register_blueprint(facility_routes)
     app.register_blueprint(scheduling_routes)
     app.register_blueprint(inventory_routes)
+    app.register_blueprint(events_routes)
     
     @login_manager.user_loader
     def load_user(user_id):
@@ -47,7 +49,10 @@ def create_app():
     @app.route('/')
     def index():
         if current_user.is_authenticated:
-            return redirect(url_for('dashboard.index'))
+            if current_user.role in ['staff', 'admin']:
+                return redirect(url_for('dashboard.index'))
+            else:
+                return redirect(url_for('dashboard.member'))
         return render_template('index.html')
     
     @app.errorhandler(404)
@@ -71,6 +76,7 @@ def create_app():
         from models.facility import Facility, Room
         from models.schedule import Schedule
         from models.inventory import InventoryItem, InventoryLog
+        from models.event import Event, EventRegistration
         
         # Create tables
         db.create_all()
